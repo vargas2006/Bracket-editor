@@ -519,12 +519,13 @@ export function renderLeaderboardToCanvas(
     curX += 100;
 
     // Total Points (Bold)
-    columns.push({ key: 'points', label: 'TOTAL PTS', width: 130, align: 'right', headerX: curX + 110 });
+    columns.push({ key: 'points', label: 'TOTAL PTS', width: 130, align: 'center', headerX: curX + 65 });
     curX += 130;
 
     // Prize
     if (options.showPrize) {
-      columns.push({ key: 'prize', label: 'PRIZE', width: contentWidth - (curX - paddingX), align: 'left', headerX: curX + 25 });
+      const prizeWidth = contentWidth - (curX - paddingX);
+      columns.push({ key: 'prize', label: 'PRIZE', width: prizeWidth, align: 'center', headerX: curX + prizeWidth / 2 });
     }
   } else {
     // Overall Standings Mode
@@ -533,8 +534,8 @@ export function renderLeaderboardToCanvas(
     columns.push({ key: 'captain', label: 'CAPTAIN & SQUAD', width: 320, align: 'left', headerX: paddingX + 600 });
     columns.push({ key: 'kills', label: 'KILLS', width: 110, align: 'center', headerX: paddingX + 960 });
     columns.push({ key: 'wins', label: 'CHICKEN DINNERS', width: 150, align: 'center', headerX: paddingX + 1100 });
-    columns.push({ key: 'prize', label: 'PRIZE', width: 160, align: 'left', headerX: paddingX + 1240 });
-    columns.push({ key: 'points', label: 'POINTS', width: 160, align: 'right', headerX: paddingX + contentWidth - 30 });
+    columns.push({ key: 'points', label: 'TOTAL PTS', width: 140, align: 'center', headerX: paddingX + 1250 });
+    columns.push({ key: 'prize', label: 'PRIZE', width: 150, align: 'center', headerX: paddingX + 1395 });
   }
 
   // Draw Table Header Bar (Solid dark surface)
@@ -851,14 +852,14 @@ export function renderLeaderboardToCanvas(
       if (options.showPrize) {
         const prizeCol = columns.find((c) => c.key === 'prize');
         if (prizeCol) {
-          ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
 
           if (prize && prize !== '—') {
-            const pw = ctx.measureText(prize).width + 16;
+            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            const pw = ctx.measureText(prize).width + 18;
             drawRoundedRect(
               ctx,
-              prizeCol.headerX,
+              prizeCol.headerX - pw / 2,
               rowY + (rowHeight - 22) / 2,
               pw,
               22,
@@ -868,11 +869,12 @@ export function renderLeaderboardToCanvas(
               1
             );
             ctx.fillStyle = '#34d399';
-            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillText(prize, prizeCol.headerX + 8, rowY + rowHeight / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText(prize, prizeCol.headerX, rowY + rowHeight / 2);
           } else {
             ctx.fillStyle = '#475569';
             ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
             ctx.fillText('—', prizeCol.headerX, rowY + rowHeight / 2);
           }
         }
@@ -881,7 +883,7 @@ export function renderLeaderboardToCanvas(
       // Total Points Column
       const pointsCol = columns.find((c) => c.key === 'points');
       if (pointsCol) {
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         let ptsColor = '#ffffff';
@@ -890,13 +892,8 @@ export function renderLeaderboardToCanvas(
         else if (isTop3) ptsColor = '#f59e0b';
 
         ctx.fillStyle = ptsColor;
-        ctx.font = isTop1 ? '900 19px monospace' : 'bold 17px monospace';
-        ctx.fillText(`${totalPoints}`, pointsCol.headerX, rowY + rowHeight / 2);
-
-        // PTS label
-        ctx.font = 'bold 10px monospace';
-        ctx.fillStyle = isTop1 ? '#d97706' : '#64748b';
-        ctx.fillText(' PTS', pointsCol.headerX + 24, rowY + rowHeight / 2);
+        ctx.font = isTop1 ? '900 17px monospace' : 'bold 16px monospace';
+        ctx.fillText(`${totalPoints} PTS`, pointsCol.headerX, rowY + rowHeight / 2);
       }
 
       rowY += rowHeight;

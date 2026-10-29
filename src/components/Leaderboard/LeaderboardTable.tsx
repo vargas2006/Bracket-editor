@@ -179,8 +179,8 @@ export const LeaderboardTable: React.FC = () => {
                   {top2.prize && top2.prize !== '—' && (
                     <>
                       <span>•</span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-1 font-sans">
-                        <Gift className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[11px] font-sans">
+                        <Gift className="w-3 h-3 text-emerald-400" />
                         {formatPrize(top2.prize)}
                       </span>
                     </>
@@ -188,7 +188,7 @@ export const LeaderboardTable: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right flex-shrink-0">
+            <div className="text-right flex-shrink-0 w-24">
               <div className="text-2xl font-black font-mono text-slate-200">
                 {top2.totalPoints}
               </div>
@@ -288,8 +288,8 @@ export const LeaderboardTable: React.FC = () => {
                   {top3.prize && top3.prize !== '—' && (
                     <>
                       <span>•</span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-1 font-sans">
-                        <Gift className="w-3 h-3" />
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[11px] font-sans">
+                        <Gift className="w-3 h-3 text-emerald-400" />
                         {formatPrize(top3.prize)}
                       </span>
                     </>
@@ -297,7 +297,7 @@ export const LeaderboardTable: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="text-right flex-shrink-0">
+            <div className="text-right flex-shrink-0 w-24">
               <div className="text-2xl font-black font-mono text-amber-500">
                 {top3.totalPoints}
               </div>
@@ -445,9 +445,9 @@ export const LeaderboardTable: React.FC = () => {
                   <th className="py-3.5 px-3 text-center hidden md:table-cell min-w-[64px]">
                     Wins
                   </th>
-                  <th className="py-3.5 px-4 text-right min-w-[90px]">Total Points</th>
-                  <th className="py-3.5 px-4 text-left hidden lg:table-cell">Prize</th>
-                  {isAdmin && <th className="py-3.5 px-4 text-right w-24">Admin</th>}
+                  <th className="py-3.5 px-4 text-center min-w-[110px] w-28">Total Points</th>
+                  <th className="py-3.5 px-4 text-center hidden lg:table-cell min-w-[120px] w-32">Prize</th>
+                  {isAdmin && <th className="py-3.5 px-4 text-right w-20">Admin</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-sm">
@@ -634,12 +634,12 @@ export const LeaderboardTable: React.FC = () => {
                           </td>
 
                           {/* Total Points */}
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5">
+                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5 font-mono">
                               <span
-                                className={`font-black font-mono text-base ${
+                                className={`font-black text-base ${
                                   isTop1
-                                    ? 'text-amber-400 text-lg'
+                                    ? 'text-amber-400'
                                     : isTop2
                                     ? 'text-slate-200'
                                     : isTop3
@@ -656,15 +656,19 @@ export const LeaderboardTable: React.FC = () => {
                           </td>
 
                           {/* Prize */}
-                          <td className="py-3 px-4 text-left whitespace-nowrap hidden lg:table-cell">
-                            {entry.prize && entry.prize.trim() !== '' && entry.prize !== '—' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold text-xs border border-emerald-500/20">
-                                <Gift className="w-3 h-3" />
-                                {formatPrize(entry.prize)}
-                              </span>
-                            ) : (
-                              <span className="text-slate-600 font-mono text-xs">—</span>
-                            )}
+                          <td className="py-3 px-4 text-center whitespace-nowrap hidden lg:table-cell">
+                            <div className="flex items-center justify-center">
+                              {entry.prize && entry.prize.trim() !== '' && entry.prize !== '—' ? (
+                                <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold text-xs border border-emerald-500/20 min-w-[80px]">
+                                  <Gift className="w-3.5 h-3.5 text-emerald-400" />
+                                  {formatPrize(entry.prize)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center justify-center text-slate-600 font-mono text-xs w-[80px]">
+                                  —
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Admin Controls */}
@@ -751,9 +755,9 @@ export const LeaderboardTable: React.FC = () => {
                   <th className="py-3.5 px-4 w-24 text-center">Placement</th>
                   <th className="py-3.5 px-4">Team Name</th>
                   <th className="py-3.5 px-4 text-center hidden sm:table-cell">Kills / Wins</th>
-                  <th className="py-3.5 px-4 text-right">Points</th>
-                  <th className="py-3.5 px-4 text-left">Prize</th>
-                  {isAdmin && <th className="py-3.5 px-4 text-right w-36">Admin Controls</th>}
+                  <th className="py-3.5 px-4 text-center min-w-[110px] w-28">Points</th>
+                  <th className="py-3.5 px-4 text-center min-w-[120px] w-32">Prize</th>
+                  {isAdmin && <th className="py-3.5 px-4 text-right w-20">Admin</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-sm">
@@ -892,12 +896,12 @@ export const LeaderboardTable: React.FC = () => {
                           </td>
 
                           {/* Points Column */}
-                          <td className="py-3 px-4 text-right whitespace-nowrap">
-                            <div className="inline-flex items-center gap-1.5">
+                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5 font-mono">
                               <span
-                                className={`font-black font-mono text-base ${
+                                className={`font-black text-base ${
                                   isTop1
-                                    ? 'text-amber-400 text-lg'
+                                    ? 'text-amber-400'
                                     : isTop2
                                     ? 'text-slate-200'
                                     : isTop3
@@ -914,15 +918,19 @@ export const LeaderboardTable: React.FC = () => {
                           </td>
 
                           {/* Prize Column */}
-                          <td className="py-3 px-4 text-left whitespace-nowrap">
-                            {entry.prize && entry.prize.trim() !== '' && entry.prize !== '—' ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold text-xs border border-emerald-500/20">
-                                <Gift className="w-3.5 h-3.5" />
-                                {formatPrize(entry.prize)}
-                              </span>
-                            ) : (
-                              <span className="text-slate-600 font-mono text-xs">—</span>
-                            )}
+                          <td className="py-3 px-4 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center">
+                              {entry.prize && entry.prize.trim() !== '' && entry.prize !== '—' ? (
+                                <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold text-xs border border-emerald-500/20 min-w-[80px]">
+                                  <Gift className="w-3.5 h-3.5 text-emerald-400" />
+                                  {formatPrize(entry.prize)}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center justify-center text-slate-600 font-mono text-xs w-[80px]">
+                                  —
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           {/* Admin Action Buttons */}
