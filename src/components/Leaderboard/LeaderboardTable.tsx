@@ -150,28 +150,36 @@ export const LeaderboardTable: React.FC = () => {
             <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none" />
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl bg-slate-300/10 border border-slate-300/30 flex items-center justify-center text-2xl flex-shrink-0">
-                {top2.logo || '🥈'}
+                {top2.totalPoints > 0 ? (top2.logo || '🥈') : '❓'}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
                     2nd Place
                   </span>
-                  {top2.isTied && (
+                  {top2.totalPoints > 0 && top2.isTied && (
                     <span className="text-[9px] font-mono bg-slate-700 text-slate-300 px-1 rounded">
                       TIED
                     </span>
                   )}
                 </div>
-                <h4 className="text-sm font-bold text-white truncate">{top2.teamName}</h4>
+                <h4 className="text-sm font-bold text-white truncate">
+                  {top2.totalPoints > 0 ? top2.teamName : 'Unknown'}
+                </h4>
                 <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span>{top2.totalKills} Kills</span>
-                  <span>•</span>
-                  <span>{top2.totalChickenDinners} Wins 👑</span>
+                  {top2.totalPoints > 0 ? (
+                    <>
+                      <span>{top2.totalKills} Kills</span>
+                      <span>•</span>
+                      <span>{top2.totalChickenDinners} Wins 👑</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-500 text-[11px] font-sans">Waiting for results...</span>
+                  )}
                   {top2.prize && top2.prize !== '—' && (
                     <>
                       <span>•</span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1 font-sans">
                         <Gift className="w-3 h-3" />
                         {formatPrize(top2.prize)}
                       </span>
@@ -195,7 +203,7 @@ export const LeaderboardTable: React.FC = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
             <div className="flex items-center gap-3.5 min-w-0">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/30 border border-amber-400/50 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
-                {top1.logo || '👑'}
+                {top1.totalPoints > 0 ? (top1.logo || '👑') : '❓'}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -203,19 +211,25 @@ export const LeaderboardTable: React.FC = () => {
                     <Trophy className="w-3.5 h-3.5" />
                     1st Place
                   </span>
-                  {top1.isTied && (
+                  {top1.totalPoints > 0 && top1.isTied && (
                     <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1 rounded border border-amber-500/30">
                       TIED
                     </span>
                   )}
                 </div>
                 <h3 className="text-base font-extrabold text-white truncate">
-                  {top1.teamName}
+                  {top1.totalPoints > 0 ? top1.teamName : 'Unknown'}
                 </h3>
                 <div className="text-xs text-amber-300 font-semibold flex items-center gap-2 mt-0.5 flex-wrap">
-                  <span className="font-mono">{top1.totalKills} Kills</span>
-                  <span>•</span>
-                  <span>{top1.totalChickenDinners} Chicken Dinners 👑</span>
+                  {top1.totalPoints > 0 ? (
+                    <>
+                      <span className="font-mono">{top1.totalKills} Kills</span>
+                      <span>•</span>
+                      <span>{top1.totalChickenDinners} Chicken Dinners 👑</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-400 font-normal">Waiting for match results...</span>
+                  )}
                   {top1.prize && top1.prize !== '—' && (
                     <>
                       <span>•</span>
@@ -245,28 +259,36 @@ export const LeaderboardTable: React.FC = () => {
             <div className="absolute top-0 right-0 w-24 h-24 bg-amber-600/5 rounded-full blur-2xl pointer-events-none" />
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-12 h-12 rounded-xl bg-amber-700/10 border border-amber-700/30 flex items-center justify-center text-2xl flex-shrink-0">
-                {top3.logo || '🥉'}
+                {top3.totalPoints > 0 ? (top3.logo || '🥉') : '❓'}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
                     3rd Place
                   </span>
-                  {top3.isTied && (
+                  {top3.totalPoints > 0 && top3.isTied && (
                     <span className="text-[9px] font-mono bg-amber-900/40 text-amber-400 px-1 rounded">
                       TIED
                     </span>
                   )}
                 </div>
-                <h4 className="text-sm font-bold text-white truncate">{top3.teamName}</h4>
+                <h4 className="text-sm font-bold text-white truncate">
+                  {top3.totalPoints > 0 ? top3.teamName : 'Unknown'}
+                </h4>
                 <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span>{top3.totalKills} Kills</span>
-                  <span>•</span>
-                  <span>{top3.totalChickenDinners} Wins 👑</span>
+                  {top3.totalPoints > 0 ? (
+                    <>
+                      <span>{top3.totalKills} Kills</span>
+                      <span>•</span>
+                      <span>{top3.totalChickenDinners} Wins 👑</span>
+                    </>
+                  ) : (
+                    <span className="text-slate-500 text-[11px] font-sans">Waiting for results...</span>
+                  )}
                   {top3.prize && top3.prize !== '—' && (
                     <>
                       <span>•</span>
-                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <span className="text-emerald-400 font-bold flex items-center gap-1 font-sans">
                         <Gift className="w-3 h-3" />
                         {formatPrize(top3.prize)}
                       </span>

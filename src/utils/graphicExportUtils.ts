@@ -257,11 +257,12 @@ export function renderLeaderboardToCanvas(
     ) => {
       if (!entry) return;
 
-      const teamName = entry.teamName || entry.name || 'Unknown';
       const points = entry.totalPoints ?? entry.points ?? 0;
+      const rawTeamName = entry.teamName || entry.name || 'Unknown';
+      const teamName = points > 0 ? rawTeamName : 'Unknown';
       const kills = entry.totalKills ?? entry.kills ?? 0;
       const wins = entry.totalChickenDinners ?? entry.wins ?? 0;
-      const logo = entry.logo || (place === 1 ? '👑' : place === 2 ? '🥈' : '🥉');
+      const logo = points > 0 ? (entry.logo || (place === 1 ? '👑' : place === 2 ? '🥈' : '🥉')) : '❓';
 
       // Determine prize: stays anchored to rank 1 to 4, displayed immediately
       const prize =
@@ -351,7 +352,11 @@ export function renderLeaderboardToCanvas(
       // Stats line: Kills • Chicken Dinners
       ctx.fillStyle = '#94a3b8';
       ctx.font = '600 11px monospace';
-      ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 76);
+      if (points > 0) {
+        ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 76);
+      } else {
+        ctx.fillText('Waiting for results...', textX, cardYPos + 76);
+      }
 
       // Prize Badge in Card
       if (prize && prize !== '—') {

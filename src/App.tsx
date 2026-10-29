@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
                   <div>
                     <div className="text-[10px] uppercase font-bold text-slate-400">#1 Standing</div>
                     <div className="text-xs font-bold text-amber-300 truncate max-w-[120px]">
-                      {topTeam.name}
+                      {topTeam.points > 0 ? topTeam.name : 'Unknown'}
                     </div>
                   </div>
                 </div>

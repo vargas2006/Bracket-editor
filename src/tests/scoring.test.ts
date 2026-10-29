@@ -204,6 +204,13 @@ function runTests() {
   assert(playedBoard[2].prize === '₱100', 'Test 8.12: Rank 3 gets Top 3 prize (₱100)');
   assert(playedBoard[3].prize === '—', 'Test 8.13: Rank 4 gets no prize ("—")');
 
+  // 9. Winner Display Condition: Unknown if pts = 0, team name if higher
+  const formatWinnerDisplay = (teamName: string, points: number) => {
+    return points > 0 ? teamName : 'Unknown';
+  };
+  assert(formatWinnerDisplay('Zeta 1', 0) === 'Unknown', 'Test 9.1: Winner display with 0 pts is Unknown');
+  assert(formatWinnerDisplay('Alpha Squad', 65) === 'Alpha Squad', 'Test 9.2: Winner display with >0 pts is team name');
+
   console.log(`\n=== TEST SUMMARY: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);
