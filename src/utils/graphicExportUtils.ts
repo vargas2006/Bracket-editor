@@ -263,7 +263,7 @@ export function renderLeaderboardToCanvas(
       const wins = entry.totalChickenDinners ?? entry.wins ?? 0;
       const logo = entry.logo || (place === 1 ? '👑' : place === 2 ? '🥈' : '🥉');
 
-      // Determine prize
+      // Determine prize: stays anchored to rank 1 to 4, displayed immediately
       const prize =
         entry.prize && entry.prize !== '—'
           ? entry.prize
@@ -271,7 +271,11 @@ export function renderLeaderboardToCanvas(
           ? prizes?.top1 || '₱500'
           : place === 2
           ? prizes?.top2 || '₱200'
-          : prizes?.top3 || '₱100';
+          : place === 3
+          ? prizes?.top3 || '₱100'
+          : place === 4 && prizes?.top4 && prizes?.top4 !== '—'
+          ? prizes?.top4
+          : '—';
 
       let borderColor = '#2d3748';
       let cardBg = '#111522';
@@ -576,9 +580,10 @@ export function renderLeaderboardToCanvas(
     displayEntries.forEach((rawEntry, idx) => {
       const isLast = idx === displayEntries.length - 1;
       const rank = (rawEntry as any).rank ?? (rawEntry as any).placement ?? idx + 1;
-      const isTop1 = rank === 1;
-      const isTop2 = rank === 2;
-      const isTop3 = rank === 3;
+      const totalPoints = (rawEntry as any).totalPoints ?? (rawEntry as any).points ?? 0;
+      const isTop1 = rank === 1 && totalPoints > 0;
+      const isTop2 = rank === 2 && totalPoints > 0;
+      const isTop3 = rank === 3 && totalPoints > 0;
 
       const teamName = (rawEntry as any).teamName || (rawEntry as any).name || 'Unknown';
       const tag = rawEntry.tag;
@@ -587,9 +592,8 @@ export function renderLeaderboardToCanvas(
       const captain = members.find((m) => m.isCaptain);
       const totalKills = (rawEntry as any).totalKills ?? (rawEntry as any).kills ?? 0;
       const totalWins = (rawEntry as any).totalChickenDinners ?? (rawEntry as any).wins ?? 0;
-      const totalPoints = (rawEntry as any).totalPoints ?? (rawEntry as any).points ?? 0;
 
-      // Prize fallback
+      // Prize fallback: stays anchored to rank 1 to 4, displayed immediately
       const prize =
         rawEntry.prize && rawEntry.prize !== '—'
           ? formatPrize(rawEntry.prize)
@@ -599,6 +603,8 @@ export function renderLeaderboardToCanvas(
           ? prizes?.top2 || '₱200'
           : rank === 3
           ? prizes?.top3 || '₱100'
+          : rank === 4 && prizes?.top4 && prizes?.top4 !== '—'
+          ? prizes?.top4
           : '—';
 
       // Clean solid row backgrounds (No bleeding colors)

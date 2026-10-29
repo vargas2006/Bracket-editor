@@ -1,11 +1,16 @@
-import { Team, LeaderboardEntry, GameLeaderboardEntry } from '../types';
+import { Team, LeaderboardEntry, GameLeaderboardEntry, TournamentPrizeSettings } from '../types';
 
 /**
  * Computes standard competition ranking (1224 rule) based purely on points.
  * Secondary tiebreaker uses kills, then wins, then alphabetical order.
- * If points are identical, both teams receive the same placement number.
+ * If teams have 0 points, they are sequentially ranked (never tie all at 1st).
+ * Only teams with points > 0 can tie if their points, kills, and wins are all equal.
+ * Prizes are strictly sticky to the 3 highest points teams with points > 0.
  */
-export function computeLeaderboard(teams: Team[]): LeaderboardEntry[] {
+export function computeLeaderboard(
+  teams: Team[],
+  prizeSettings?: TournamentPrizeSettings
+): LeaderboardEntry[] {
   const sorted = [...teams].sort((a, b) => {
     if (b.points !== a.points) {
       return b.points - a.points;
@@ -19,36 +24,55 @@ export function computeLeaderboard(teams: Team[]): LeaderboardEntry[] {
     return a.name.localeCompare(b.name);
   });
 
+  const activePrizes = prizeSettings || {
+    top1: '₱500',
+    top2: '₱200',
+    top3: '₱100',
+    autoApply: true,
+  };
+
   const result: LeaderboardEntry[] = [];
   let currentPlacement = 1;
 
   for (let i = 0; i < sorted.length; i++) {
     const currentTeam = sorted[i];
+    const prevTeam = sorted[i - 1];
 
-    if (i > 0 && currentTeam.points === sorted[i - 1].points) {
-      const prevPlacement = result[i - 1].placement;
+    const isTiedWithPrev =
+      i > 0 &&
+      currentTeam.points > 0 &&
+      currentTeam.points === prevTeam.points &&
+      (currentTeam.kills ?? 0) === (prevTeam.kills ?? 0) &&
+      (currentTeam.wins ?? 0) === (prevTeam.wins ?? 0);
+
+    let placement = i + 1;
+    let isTied = false;
+
+    if (isTiedWithPrev) {
+      placement = result[i - 1].placement;
+      isTied = true;
       result[i - 1].isTied = true;
-      result.push({
-        ...currentTeam,
-        placement: prevPlacement,
-        isTied: true,
-        tiebreakerNote: currentTeam.kills !== undefined ? `${currentTeam.kills} Kills` : undefined,
-      });
     } else {
       currentPlacement = i + 1;
-      result.push({
-        ...currentTeam,
-        placement: currentPlacement,
-        isTied: false,
-      });
+      placement = currentPlacement;
     }
-  }
 
-  for (let i = 0; i < result.length - 1; i++) {
-    if (result[i].points === result[i + 1].points) {
-      result[i].isTied = true;
-      result[i + 1].isTied = true;
-    }
+    // Dynamic sticky prize:
+    // Stays pinned to ranks 1 to 4, displayed immediately even with 0 points
+    let prize = '—';
+    if (placement === 1 && activePrizes.top1) prize = activePrizes.top1;
+    else if (placement === 2 && activePrizes.top2) prize = activePrizes.top2;
+    else if (placement === 3 && activePrizes.top3) prize = activePrizes.top3;
+    else if (placement === 4 && activePrizes.top4 && activePrizes.top4 !== '—') prize = activePrizes.top4;
+    else prize = '—';
+
+    result.push({
+      ...currentTeam,
+      placement,
+      isTied,
+      prize,
+      tiebreakerNote: isTied && currentTeam.kills !== undefined ? `${currentTeam.kills} Kills` : undefined,
+    });
   }
 
   return result;

@@ -346,8 +346,13 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Computed game-by-game tournament matrix leaderboard
   const gameLeaderboard = useMemo(() => {
-    return computeGameLeaderboard(teams, gameResults, settings.scoring?.totalGames || 5);
-  }, [teams, gameResults, settings.scoring?.totalGames]);
+    return computeGameLeaderboard(
+      teams,
+      gameResults,
+      settings.scoring?.totalGames || 5,
+      settings.prizes || DEFAULT_PRIZE_SETTINGS
+    );
+  }, [teams, gameResults, settings.scoring?.totalGames, settings.prizes]);
 
   // Synchronize team totals from gameResults
   useEffect(() => {
@@ -363,32 +368,65 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setTeams((prevTeams) => {
       let hasChanged = false;
       const updated = prevTeams.map((team) => {
-        const recorded = totalsByTeam.get(team.id);
-        if (recorded) {
-          if (
-            team.points !== recorded.points ||
-            team.kills !== recorded.kills ||
-            team.wins !== recorded.wins
-          ) {
-            hasChanged = true;
-            return {
-              ...team,
-              points: recorded.points,
-              kills: recorded.kills,
-              wins: recorded.wins,
-            };
-          }
+        const recorded = totalsByTeam.get(team.id) || { points: 0, kills: 0, wins: 0 };
+        if (
+          team.points !== recorded.points ||
+          team.kills !== recorded.kills ||
+          team.wins !== recorded.wins
+        ) {
+          hasChanged = true;
+          return {
+            ...team,
+            points: recorded.points,
+            kills: recorded.kills,
+            wins: recorded.wins,
+          };
         }
         return team;
       });
-      return hasChanged ? updated : prevTeams;
+
+      if (!hasChanged) return prevTeams;
+
+      // Keep prizes sticky to top ranks 1 to 4 (displayed immediately even with 0 points)
+      const activePrizes = settings.prizes || DEFAULT_PRIZE_SETTINGS;
+      if (activePrizes.autoApply !== false) {
+        const sorted = [...updated].sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          const kd = (b.kills ?? 0) - (a.kills ?? 0);
+          if (kd !== 0) return kd;
+          return (b.wins ?? 0) - (a.wins ?? 0);
+        });
+
+        const top1Id = sorted[0]?.id;
+        const top2Id = sorted[1]?.id;
+        const top3Id = sorted[2]?.id;
+        const top4Id = sorted[3]?.id;
+
+        return updated.map((team) => {
+          if (team.id === top1Id && activePrizes.top1) {
+            return { ...team, prize: activePrizes.top1 };
+          }
+          if (team.id === top2Id && activePrizes.top2) {
+            return { ...team, prize: activePrizes.top2 };
+          }
+          if (team.id === top3Id && activePrizes.top3) {
+            return { ...team, prize: activePrizes.top3 };
+          }
+          if (team.id === top4Id && activePrizes.top4 && activePrizes.top4 !== '—') {
+            return { ...team, prize: activePrizes.top4 };
+          }
+          return { ...team, prize: '—' };
+        });
+      }
+
+      return updated;
     });
-  }, [gameResults]);
+  }, [gameResults, settings.prizes]);
 
   // Computed Overall Leaderboard
   const leaderboard = useMemo(() => {
-    return computeLeaderboard(teams);
-  }, [teams]);
+    return computeLeaderboard(teams, settings.prizes || DEFAULT_PRIZE_SETTINGS);
+  }, [teams, settings.prizes]);
 
   // Team Actions
   const addTeam = (teamData: Omit<Team, 'id'>) => {
@@ -624,11 +662,11 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         } else if (team.id === top4Id && activePrizes.top4 && activePrizes.top4 !== '—') {
           return { ...team, prize: activePrizes.top4 };
         }
-        return team;
+        return { ...team, prize: '—' };
       });
     });
 
-    showToast('Placement prizes assigned to Top 1, Top 2, and Top 3 teams!');
+    showToast('Placement prizes assigned to Top 1, Top 2, and Top 3 teams!', 'success', 'Prizes Updated');
   };
 
   const updatePrizeSettings = (updates: Partial<TournamentPrizeSettings>) => {

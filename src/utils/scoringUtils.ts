@@ -1,4 +1,4 @@
-import { GameResult, TournamentScoringSettings, Team, GameLeaderboardEntry } from '../types';
+import { GameResult, TournamentScoringSettings, TournamentPrizeSettings, Team, GameLeaderboardEntry } from '../types';
 
 export const DEFAULT_PLACEMENT_POINTS: Record<number, number> = {
   1: 0, // Usually covered by Chicken Dinner bonus, or configurable
@@ -118,7 +118,8 @@ export function validateGameResultInput(
 export function computeGameLeaderboard(
   teams: Team[],
   results: GameResult[],
-  totalGames: number
+  totalGames: number,
+  prizeSettings?: TournamentPrizeSettings
 ): GameLeaderboardEntry[] {
   // Map of teamId + gameNumber -> GameResult
   const resultMap = new Map<string, GameResult>();
@@ -155,7 +156,7 @@ export function computeGameLeaderboard(
       tag: team.tag,
       logo: team.logo,
       members: team.members,
-      prize: team.prize,
+      prize: '—',
       gameScores,
       gameResults,
       totalPoints,
@@ -180,13 +181,16 @@ export function computeGameLeaderboard(
     return a.teamName.localeCompare(b.teamName);
   });
 
-  // Rank with standard competition ranking
+  // Rank with standard competition ranking:
+  // If teams have 0 points, assign sequential ranks 1, 2, 3... (never tie everyone at 1st).
+  // Only teams with points > 0 can tie when all metrics are identical.
   let currentRank = 1;
   for (let i = 0; i < entries.length; i++) {
     const curr = entries[i];
     if (i > 0) {
       const prev = entries[i - 1];
       const isIdentical =
+        curr.totalPoints > 0 &&
         curr.totalPoints === prev.totalPoints &&
         curr.totalKills === prev.totalKills &&
         curr.totalChickenDinners === prev.totalChickenDinners;
@@ -205,6 +209,30 @@ export function computeGameLeaderboard(
       curr.rank = 1;
     }
   }
+
+  // Dynamic sticky prizes:
+  // Prizes stay locked to top ranks (1 to 4) and are displayed immediately even if 0 points
+  const activePrizes = prizeSettings || {
+    top1: '₱500',
+    top2: '₱200',
+    top3: '₱100',
+    top4: '—',
+    autoApply: true,
+  };
+
+  entries.forEach((entry) => {
+    if (entry.rank === 1 && activePrizes.top1) {
+      entry.prize = activePrizes.top1;
+    } else if (entry.rank === 2 && activePrizes.top2) {
+      entry.prize = activePrizes.top2;
+    } else if (entry.rank === 3 && activePrizes.top3) {
+      entry.prize = activePrizes.top3;
+    } else if (entry.rank === 4 && activePrizes.top4 && activePrizes.top4 !== '—') {
+      entry.prize = activePrizes.top4;
+    } else {
+      entry.prize = '—';
+    }
+  });
 
   return entries;
 }

@@ -114,7 +114,16 @@ export const LeaderboardTable: React.FC = () => {
     });
   };
 
-  const getRankBadge = (rank: number) => {
+  const getRankBadge = (rank: number, points?: number) => {
+    // If team has 0 points, render a clean neutral ordinal rank badge (no winner trophies)
+    if (points === 0) {
+      return (
+        <div className="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-400 font-mono font-bold text-xs">
+          {formatOrdinal(rank)}
+        </div>
+      );
+    }
+
     if (rank === 1) {
       return (
         <div className="flex items-center justify-center gap-1 font-black text-amber-400">
@@ -156,6 +165,7 @@ export const LeaderboardTable: React.FC = () => {
   const top1 = gameLeaderboard[0];
   const top2 = gameLeaderboard[1];
   const top3 = gameLeaderboard[2];
+  const hasAnyPoints = gameLeaderboard.some((t) => t.totalPoints > 0);
 
   return (
     <div className="space-y-6">
@@ -464,9 +474,9 @@ export const LeaderboardTable: React.FC = () => {
                   </tr>
                 ) : (
                   filteredGameEntries.map((entry) => {
-                    const isTop1 = entry.rank === 1;
-                    const isTop2 = entry.rank === 2;
-                    const isTop3 = entry.rank === 3;
+                    const isTop1 = entry.rank === 1 && entry.totalPoints > 0;
+                    const isTop2 = entry.rank === 2 && entry.totalPoints > 0;
+                    const isTop3 = entry.rank === 3 && entry.totalPoints > 0;
                     const isExpanded = !!expandedTeamIds[entry.teamId];
                     const captain = entry.members.find((m) => m.isCaptain);
                     const originalTeam = leaderboard.find((t) => t.id === entry.teamId);
@@ -487,7 +497,7 @@ export const LeaderboardTable: React.FC = () => {
                           {/* Rank Column */}
                           <td className="py-3 px-4 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1">
-                              {getRankBadge(entry.rank)}
+                              {getRankBadge(entry.rank, entry.totalPoints)}
                               {entry.isTied && (
                                 <span
                                   title={`Tied on points (${entry.tiebreakerNote || ''})`}
@@ -780,9 +790,9 @@ export const LeaderboardTable: React.FC = () => {
                   </tr>
                 ) : (
                   filteredStandingsEntries.map((entry) => {
-                    const isTop1 = entry.placement === 1;
-                    const isTop2 = entry.placement === 2;
-                    const isTop3 = entry.placement === 3;
+                    const isTop1 = entry.placement === 1 && entry.points > 0;
+                    const isTop2 = entry.placement === 2 && entry.points > 0;
+                    const isTop3 = entry.placement === 3 && entry.points > 0;
                     const isExpanded = !!expandedTeamIds[entry.id];
                     const captain = entry.members.find((m) => m.isCaptain);
 
@@ -802,7 +812,7 @@ export const LeaderboardTable: React.FC = () => {
                           {/* Placement Column */}
                           <td className="py-3 px-4 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1">
-                              {getRankBadge(entry.placement)}
+                              {getRankBadge(entry.placement, entry.points)}
                               {entry.isTied && (
                                 <span
                                   title="Tied with another team on points"

@@ -148,6 +148,62 @@ function runTests() {
   assert(prizeSettings.top2 === '₱200', 'Test 7.2: Top 2 prize is ₱200');
   assert(prizeSettings.top3 === '₱100', 'Test 7.3: Top 3 prize is ₱100');
 
+  // 8. Zero Points & Sticky Prize Tests
+  const zeroTeams: Team[] = [
+    { id: 'z1', name: 'Zeta 1', points: 0, kills: 0, wins: 0, matchesPlayed: 0, members: [] },
+    { id: 'z2', name: 'Zeta 2', points: 0, kills: 0, wins: 0, matchesPlayed: 0, members: [] },
+    { id: 'z3', name: 'Zeta 3', points: 0, kills: 0, wins: 0, matchesPlayed: 0, members: [] },
+    { id: 'z4', name: 'Zeta 4', points: 0, kills: 0, wins: 0, matchesPlayed: 0, members: [] },
+  ];
+  const zeroBoard = computeGameLeaderboard(zeroTeams, [], 3, prizeSettings);
+  assert(zeroBoard[0].rank === 1, 'Test 8.1: 0-pt team 1 is rank 1');
+  assert(zeroBoard[1].rank === 2, 'Test 8.2: 0-pt team 2 is rank 2 (not tied as 1st)');
+  assert(zeroBoard[2].rank === 3, 'Test 8.3: 0-pt team 3 is rank 3 (not tied as 1st)');
+  assert(zeroBoard[3].rank === 4, 'Test 8.4: 0-pt team 4 is rank 4');
+  assert(zeroBoard[0].prize === '₱500', 'Test 8.5: Rank 1 displays Top 1 prize (₱500) even with 0 pts');
+  assert(zeroBoard[1].prize === '₱200', 'Test 8.6: Rank 2 displays Top 2 prize (₱200) even with 0 pts');
+  assert(zeroBoard[2].prize === '₱100', 'Test 8.7: Rank 3 displays Top 3 prize (₱100) even with 0 pts');
+  assert(zeroBoard[3].prize === '—', 'Test 8.8: Rank 4 displays fallback "—"');
+  assert(zeroBoard.every((e) => !e.isTied), 'Test 8.9: 0-pt teams are not marked as tied');
+
+  // Sticky prize test with played games
+  const partialResults: GameResult[] = [
+    {
+      id: 'pr1',
+      teamId: 'z1',
+      teamName: 'Zeta 1',
+      gameNumber: 1,
+      kills: 10,
+      placement: 1,
+      chickenDinner: true,
+      killPoints: 50,
+      placementPoints: 0,
+      chickenDinnerBonus: 25,
+      totalPoints: 75,
+      updatedAt: Date.now(),
+    },
+    {
+      id: 'pr2',
+      teamId: 'z2',
+      teamName: 'Zeta 2',
+      gameNumber: 1,
+      kills: 4,
+      placement: 2,
+      chickenDinner: false,
+      killPoints: 20,
+      placementPoints: 20,
+      chickenDinnerBonus: 0,
+      totalPoints: 40,
+      updatedAt: Date.now(),
+    },
+    // z3 and z4 have 0 points
+  ];
+  const playedBoard = computeGameLeaderboard(zeroTeams, partialResults, 3, prizeSettings);
+  assert(playedBoard[0].prize === '₱500', 'Test 8.10: Rank 1 gets Top 1 prize (₱500)');
+  assert(playedBoard[1].prize === '₱200', 'Test 8.11: Rank 2 gets Top 2 prize (₱200)');
+  assert(playedBoard[2].prize === '₱100', 'Test 8.12: Rank 3 gets Top 3 prize (₱100)');
+  assert(playedBoard[3].prize === '—', 'Test 8.13: Rank 4 gets no prize ("—")');
+
   console.log(`\n=== TEST SUMMARY: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);
