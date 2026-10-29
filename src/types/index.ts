@@ -57,11 +57,51 @@ export interface BracketData {
   updatedAt: number;
 }
 
+export interface TournamentScoringSettings {
+  pointsPerKill: number; // default: 5
+  chickenDinnerBonus: number; // default: 25
+  totalGames: number; // default: 5
+  placementPointsEnabled: boolean; // default: true
+  placementPoints: Record<number, number>; // { 1: 0, 2: 20, 3: 15, 4: 10, ... }
+}
+
 export interface TournamentSettings {
   competitionName: string;
   seasonOrStage: string;
   pointsPerKill: number;
   pointsForChickenDinner: number;
   adminPin: string;
+  scoring: TournamentScoringSettings;
 }
 
+export interface GameResult {
+  id: string; // e.g. `gr_${teamId}_game${gameNumber}`
+  teamId: string;
+  teamName: string;
+  gameNumber: number;
+  kills: number;
+  placement?: number;
+  chickenDinner: boolean;
+  killPoints: number;
+  placementPoints: number;
+  chickenDinnerBonus: number;
+  totalPoints: number;
+  updatedAt: number;
+}
+
+export interface GameLeaderboardEntry {
+  teamId: string;
+  teamName: string;
+  tag?: string;
+  logo?: string;
+  members: Player[];
+  prize?: string;
+  gameScores: Record<number, number>; // gameNumber -> totalPoints (0 if not recorded)
+  gameResults: Record<number, GameResult | undefined>;
+  totalPoints: number;
+  totalKills: number;
+  totalChickenDinners: number;
+  rank: number;
+  isTied: boolean;
+  tiebreakerNote?: string;
+}

@@ -1,24 +1,32 @@
-import { Team, BracketData, TournamentSettings } from '../types';
+import { Team, BracketData, TournamentSettings, GameResult } from '../types';
+import { DEFAULT_SCORING_SETTINGS, calculateGamePoints } from '../utils/scoringUtils';
+import { generateSingleEliminationBracket } from '../utils/bracketUtils';
 
 export const INITIAL_SETTINGS: TournamentSettings = {
   competitionName: 'ROS LEGACY CHAMPIONS CUP 2026',
   seasonOrStage: 'GRAND FINALS STAGE',
-  pointsPerKill: 1,
-  pointsForChickenDinner: 10,
+  pointsPerKill: 5,
+  pointsForChickenDinner: 25,
   adminPin: '1234',
+  scoring: DEFAULT_SCORING_SETTINGS,
 };
 
-export const INITIAL_TEAMS: Team[] = [
+// Clean slate: Initially empty so user can enter their own data
+export const INITIAL_TEAMS: Team[] = [];
+export const INITIAL_GAME_RESULTS: GameResult[] = [];
+
+// Sample data kept for optional demo restore
+export const SAMPLE_TEAMS: Team[] = [
   {
     id: 'team-zenith',
     name: 'ZENITH ENTITY',
     tag: 'ZE',
     logo: '⚡',
-    points: 131,
+    points: 135,
     prize: '₱1,000',
-    wins: 4,
-    kills: 42,
-    matchesPlayed: 6,
+    wins: 2,
+    kills: 15,
+    matchesPlayed: 3,
     members: [
       { id: 'p1', ign: 'ZE_Viper', isCaptain: true, role: 'IGL / Sniper' },
       { id: 'p2', ign: 'ZE_Shadow', isCaptain: false, role: 'Assault / Rusher' },
@@ -31,11 +39,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'KINOS',
     tag: 'KNS',
     logo: '👑',
-    points: 108,
+    points: 115,
     prize: 'In-game rewards',
-    wins: 3,
-    kills: 36,
-    matchesPlayed: 6,
+    wins: 1,
+    kills: 12,
+    matchesPlayed: 3,
     members: [
       { id: 'p5', ign: 'Kinos_Ace', isCaptain: true, role: 'IGL' },
       { id: 'p6', ign: 'Kinos_Raven', isCaptain: false, role: 'Sniper' },
@@ -48,11 +56,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'KREX E X',
     tag: 'KREX',
     logo: '🔥',
-    points: 106,
+    points: 110,
     prize: '—',
-    wins: 2,
-    kills: 38,
-    matchesPlayed: 6,
+    wins: 1,
+    kills: 11,
+    matchesPlayed: 3,
     members: [
       { id: 'p9', ign: 'KREX_Roxas', isCaptain: true, role: 'Captain' },
       { id: 'p10', ign: 'KREX_Dante', isCaptain: false, role: 'Marksman' },
@@ -65,11 +73,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'BLACKLIST LEGACY',
     tag: 'BLCK',
     logo: '💀',
-    points: 94,
+    points: 95,
     prize: '—',
-    wins: 2,
-    kills: 31,
-    matchesPlayed: 6,
+    wins: 0,
+    kills: 9,
+    matchesPlayed: 3,
     members: [
       { id: 'p13', ign: 'BLCK_Apex', isCaptain: true, role: 'IGL' },
       { id: 'p14', ign: 'BLCK_Hades', isCaptain: false, role: 'Assault' },
@@ -82,11 +90,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'OMEGA VANGUARD',
     tag: 'OMG',
     logo: '🛡️',
-    points: 88,
+    points: 82,
     prize: '—',
-    wins: 1,
-    kills: 29,
-    matchesPlayed: 6,
+    wins: 0,
+    kills: 8,
+    matchesPlayed: 3,
     members: [
       { id: 'p17', ign: 'OMG_Titan', isCaptain: true, role: 'Captain' },
       { id: 'p18', ign: 'OMG_Reaper', isCaptain: false, role: 'Fragger' },
@@ -99,11 +107,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'ECLIPSE GAMING',
     tag: 'ECL',
     logo: '🌘',
-    points: 75,
+    points: 70,
     prize: '—',
-    wins: 1,
-    kills: 24,
-    matchesPlayed: 6,
+    wins: 0,
+    kills: 7,
+    matchesPlayed: 3,
     members: [
       { id: 'p21', ign: 'ECL_Lunar', isCaptain: true, role: 'IGL' },
       { id: 'p22', ign: 'ECL_Solar', isCaptain: false, role: 'Fragger' },
@@ -116,11 +124,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'ARCTIC WOLVES',
     tag: 'ARC',
     logo: '🐺',
-    points: 62,
+    points: 58,
     prize: '—',
-    wins: 1,
-    kills: 20,
-    matchesPlayed: 6,
+    wins: 0,
+    kills: 5,
+    matchesPlayed: 3,
     members: [
       { id: 'p25', ign: 'ARC_Blizzard', isCaptain: true, role: 'Captain' },
       { id: 'p26', ign: 'ARC_Fang', isCaptain: false, role: 'Rusher' },
@@ -133,11 +141,11 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'PHANTOM SYNDICATE',
     tag: 'PHN',
     logo: '👻',
-    points: 55,
+    points: 44,
     prize: '—',
     wins: 0,
-    kills: 18,
-    matchesPlayed: 6,
+    kills: 4,
+    matchesPlayed: 3,
     members: [
       { id: 'p29', ign: 'PHN_Wraith', isCaptain: true, role: 'IGL' },
       { id: 'p30', ign: 'PHN_Mirage', isCaptain: false, role: 'Scout' },
@@ -147,18 +155,74 @@ export const INITIAL_TEAMS: Team[] = [
   },
 ];
 
-export function generateInitialBracket(teams: Team[]): BracketData {
-  // Build standard 8-team Single Elimination bracket with Quarterfinals, Semifinals, Finals, and 3rd Place Match
-  const t = teams.map((team) => team.id);
+function createGameResult(
+  teamId: string,
+  teamName: string,
+  gameNumber: number,
+  kills: number,
+  placement: number,
+  chickenDinner: boolean
+): GameResult {
+  const pts = calculateGamePoints(kills, placement, chickenDinner, DEFAULT_SCORING_SETTINGS);
+  return {
+    id: `gr_${teamId}_g${gameNumber}`,
+    teamId,
+    teamName,
+    gameNumber,
+    kills,
+    placement,
+    chickenDinner,
+    killPoints: pts.killPoints,
+    placementPoints: pts.placementPoints,
+    chickenDinnerBonus: pts.chickenDinnerBonus,
+    totalPoints: pts.totalPoints,
+    updatedAt: Date.now(),
+  };
+}
 
+export const SAMPLE_GAME_RESULTS: GameResult[] = [
+  createGameResult('team-zenith', 'ZENITH ENTITY', 1, 8, 1, true),
+  createGameResult('team-kinos', 'KINOS', 1, 3, 2, false),
+  createGameResult('team-krex', 'KREX E X', 1, 4, 3, false),
+  createGameResult('team-blacklist', 'BLACKLIST LEGACY', 1, 4, 4, false),
+  createGameResult('team-omega', 'OMEGA VANGUARD', 1, 3, 5, false),
+  createGameResult('team-eclipse', 'ECLIPSE GAMING', 1, 2, 6, false),
+  createGameResult('team-arctic', 'ARCTIC WOLVES', 1, 1, 7, false),
+  createGameResult('team-phantom', 'PHANTOM SYNDICATE', 1, 0, 8, false),
+
+  createGameResult('team-zenith', 'ZENITH ENTITY', 2, 4, 2, false),
+  createGameResult('team-kinos', 'KINOS', 2, 7, 1, true),
+  createGameResult('team-krex', 'KREX E X', 2, 3, 4, false),
+  createGameResult('team-blacklist', 'BLACKLIST LEGACY', 2, 3, 3, false),
+  createGameResult('team-omega', 'OMEGA VANGUARD', 2, 4, 5, false),
+  createGameResult('team-eclipse', 'ECLIPSE GAMING', 2, 3, 6, false),
+  createGameResult('team-arctic', 'ARCTIC WOLVES', 2, 2, 7, false),
+  createGameResult('team-phantom', 'PHANTOM SYNDICATE', 2, 2, 8, false),
+
+  createGameResult('team-zenith', 'ZENITH ENTITY', 3, 3, 3, false),
+  createGameResult('team-kinos', 'KINOS', 3, 2, 4, false),
+  createGameResult('team-krex', 'KREX E X', 3, 5, 1, true),
+  createGameResult('team-blacklist', 'BLACKLIST LEGACY', 3, 4, 2, false),
+  createGameResult('team-omega', 'OMEGA VANGUARD', 3, 3, 6, false),
+  createGameResult('team-eclipse', 'ECLIPSE GAMING', 3, 2, 5, false),
+  createGameResult('team-arctic', 'ARCTIC WOLVES', 3, 2, 8, false),
+  createGameResult('team-phantom', 'PHANTOM SYNDICATE', 3, 2, 7, false),
+];
+
+export function generateInitialBracket(teams: Team[]): BracketData {
+  if (!teams || teams.length === 0) {
+    return generateSingleEliminationBracket(8, [], true, 'ROS Legacy Championship - Bracket');
+  }
+
+  const t = teams.map((team) => team.id);
   const qfMatches = [
     {
       id: 'm-qf-1',
       roundIndex: 0,
       matchIndex: 0,
       roundName: 'Quarter-Finals',
-      team1Id: t[0] || null, // Zenith
-      team2Id: t[7] || null, // Phantom
+      team1Id: t[0] || null,
+      team2Id: t[7] || null,
       score1: 2,
       score2: 0,
       winnerId: t[0] || null,
@@ -171,8 +235,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 0,
       matchIndex: 1,
       roundName: 'Quarter-Finals',
-      team1Id: t[3] || null, // Blacklist
-      team2Id: t[4] || null, // Omega
+      team1Id: t[3] || null,
+      team2Id: t[4] || null,
       score1: 2,
       score2: 1,
       winnerId: t[3] || null,
@@ -185,8 +249,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 0,
       matchIndex: 2,
       roundName: 'Quarter-Finals',
-      team1Id: t[1] || null, // Kinos
-      team2Id: t[6] || null, // Arctic Wolves
+      team1Id: t[1] || null,
+      team2Id: t[6] || null,
       score1: 2,
       score2: 0,
       winnerId: t[1] || null,
@@ -199,8 +263,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 0,
       matchIndex: 3,
       roundName: 'Quarter-Finals',
-      team1Id: t[2] || null, // Krex
-      team2Id: t[5] || null, // Eclipse
+      team1Id: t[2] || null,
+      team2Id: t[5] || null,
       score1: 2,
       score2: 1,
       winnerId: t[2] || null,
@@ -216,8 +280,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 1,
       matchIndex: 0,
       roundName: 'Semi-Finals',
-      team1Id: t[0] || null, // Zenith
-      team2Id: t[3] || null, // Blacklist
+      team1Id: t[0] || null,
+      team2Id: t[3] || null,
       score1: 2,
       score2: 1,
       winnerId: t[0] || null,
@@ -230,8 +294,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 1,
       matchIndex: 1,
       roundName: 'Semi-Finals',
-      team1Id: t[1] || null, // Kinos
-      team2Id: t[2] || null, // Krex
+      team1Id: t[1] || null,
+      team2Id: t[2] || null,
       score1: 2,
       score2: 0,
       winnerId: t[1] || null,
@@ -247,8 +311,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
       roundIndex: 2,
       matchIndex: 0,
       roundName: 'Grand Finals',
-      team1Id: t[0] || null, // Zenith
-      team2Id: t[1] || null, // Kinos
+      team1Id: t[0] || null,
+      team2Id: t[1] || null,
       score1: null,
       score2: null,
       winnerId: null,
@@ -261,8 +325,8 @@ export function generateInitialBracket(teams: Team[]): BracketData {
     roundIndex: 2,
     matchIndex: 1,
     roundName: '3rd Place Decider',
-    team1Id: t[3] || null, // Blacklist
-    team2Id: t[2] || null, // Krex
+    team1Id: t[3] || null,
+    team2Id: t[2] || null,
     score1: 1,
     score2: 2,
     winnerId: t[2] || null,
@@ -284,4 +348,3 @@ export function generateInitialBracket(teams: Team[]): BracketData {
     updatedAt: Date.now(),
   };
 }
-

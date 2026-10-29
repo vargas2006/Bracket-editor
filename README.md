@@ -1,67 +1,71 @@
-# ROS Legacy Community Leaderboard & Tournament Bracket
+# ROS Legacy Tournament Bracket Editor & Scoring System
 
-A modern esports leaderboard and single-elimination tournament management web application built specifically for the **Rules of Survival Legacy (ROS Legacy)** gaming community.
-
----
-
-## 🌟 Key Features
-
-### 1. Leaderboard Table
-- **Layout & Structure**: Clean, compact table displaying Placement, Team Name (with badge & tag), Secondary stats (Kills / Wins), Total Points, Prize, and Admin controls.
-- **Top 3 Podium Highlighting**: Dedicated top-3 podium cards and highlighted gold (1st), silver (2nd), and bronze (3rd) medal accents.
-- **Auto-Sorting & Instant Re-ranking**: Real-time points ranking from highest to lowest. Placement updates automatically whenever points change.
-- **Tie-Breaking Rule**: Follows standard competition ranking ("1224" rule) with tie badges and secondary sorting (Kills & Wins).
-- **Prize Management**: Supports optional cash prizes (e.g., `₱1,000`), in-game rewards, or custom items. Shows `—` when unassigned.
-- **Search & Filter**: Real-time search across team names, tags, and individual player IGNs.
-
-### 2. Team Members & Player IGN Display
-- **Mode A: Hover to View**: Hovering over a team name on desktop (or tapping on mobile) displays an esports popover showing all member IGNs, their roles (IGL, Sniper, Fragger, etc.), and the designated Captain (crown badge).
-- **Mode B: Expandable Row**: Clicking the chevron next to a team name smoothly expands the table row to reveal player cards directly within the table.
-- **View Mode Switcher**: Easily switch between **Hover Mode** and **Expand Mode** with a single click in the leaderboard toolbar.
-
-### 3. ROS Legacy Tournament Bracket
-- **Single Elimination Bracket**: Supports 4, 8, or 16-team tournaments with standard round labels (*Quarter-Finals*, *Semi-Finals*, *Grand Finals*).
-- **Connected Bracket Tree**: Clean connected bracket cards displaying team seeds, logos, names, scores, and winner crowns.
-- **Live Scoring & Auto-Advancement**: Recording a match result automatically advances the winner to the next round slot.
-- **Third-Place Match (Bronze Decider)**: Dedicated 3rd place match for the two semi-final losers.
-- **Champion Confetti Celebration**: Dynamic victory animation when a tournament champion is crowned in the Grand Finals!
-- **Mobile Responsive**: Horizontally scrollable tree on desktop, with quick round navigation tabs on mobile screens.
-
-### 4. Teams & Rosters Directory
-- Full squad cards with captain designations, member lists, badges, and records.
-- Create, edit, and delete teams with dynamic player inputs.
-
-### 5. Admin Controls & Security
-- **Admin vs. Guest View Mode**: Ordinary community visitors can browse standings and brackets in read-only mode without accidental changes.
-- **PIN Unlock**: Quick authentication modal (Default PIN: `1234`).
-- **Live Battle Royale Scorer**: 1-click `+10 Chicken Dinner` and `+1 Frag` points adjustment buttons.
-- **Reset Points for New Competitions**: Reset scores to 0 while keeping rosters intact.
-- **Restore Demo Data**: 1-click restore to sample community data (*Zenith Entity*, *Kinos*, *Krex E X*).
-- **Export Options**:
-  - **CSV Export**: Standard spreadsheet download.
-  - **Graphic PNG Export**: Generates a high-definition esports leaderboard card ready to post on Discord and Facebook groups.
-  - **JSON Backup / Restore**: Backup full tournament state or migrate between devices.
+A modern esports tournament management web app built specifically for the **Rules of Survival Legacy (ROS Legacy)** gaming community, featuring single-elimination tournament brackets, team rosters, and a **configurable kill-based tournament scoring system**.
 
 ---
 
-## 🚀 Running the Project Locally
+## 🌟 New Features: Configurable Tournament Scoring System
+
+### 1. Tournament Scoring Settings (Admin Configurable)
+- **Points per Kill**: Custom multiplier per elimination (Default: `5 points`).
+- **Chicken Dinner Bonus**: Extra reward points for winning a match (Default: `25 points`).
+- **Configurable Tournament Games**: Manage the number of games/rounds (e.g. 3, 5, 8 games).
+- **Finishing Placement Points**: Enable or disable placement points for finishing positions (e.g., 2nd Place = 20 pts, 3rd Place = 15 pts, 4th Place = 10 pts, etc.).
+- **Dynamic Recalculation Engine**: When scoring settings change, all existing game results and leaderboard standings are recalculated automatically without data loss.
+
+### 2. Game Result Entry Console
+- Record and edit results for each team in each game (Game 1, Game 2, Game 3...).
+- Includes:
+  - Team selection
+  - Game / round number
+  - Number of kills (non-negative integer)
+  - Final placement
+  - Chicken Dinner status (Yes / No)
+- **Live Calculation Preview**: Displays Kill Points, Placement Points, Chicken Dinner Bonus, and Game Total in real-time *before* saving.
+- **Duplicate Prevention**: Automatically updates an existing result for the same team and game number instead of creating duplicate records.
+- **Delete Result**: Allows removing accidental entries with instant recalculation.
+
+### 3. Automatic Game-by-Game Leaderboard
+- Displays:
+  - **Rank**: 1st (Gold), 2nd (Silver), 3rd (Bronze) badges with tied rank detection.
+  - **Team**: Name, tag, badge, roster hover popover, and expandable roster row.
+  - **Game Columns**: Game 1, Game 2, Game 3, ... through the configured number of games.
+  - **Total Kills & Chicken Dinners (👑)**: Secondary tiebreaker metrics.
+  - **Total Points**: High-contrast highlighted total score.
+- **Missing Results**: Displays `0` points for games not yet played by a team without fabricating phantom records in storage.
+- **View Switcher**: Toggle between the **"Game-by-Game Leaderboard"** and **"Overall Standings & Prizes"** table views.
+- **Tie-Breaking Rule**: Sorts by Total Points descending $\to$ Total Kills $\to$ Chicken Dinner count.
+
+### 4. Admin Permissions & Security
+- Only authenticated admins (`isAdmin === true`) can modify scoring settings, record results, delete results, or change tournament games.
+- Ordinary visitors can browse the live leaderboard, game scores, and bracket in read-only mode.
+- Admin PIN lock: Default PIN is `1234` (configurable).
+
+---
+
+## 🚀 Running the Project
 
 1. **Install dependencies**:
    ```bash
    npm install
    ```
 
-2. **Start the development server**:
+2. **Run tests**:
+   ```bash
+   npm test
+   ```
+
+3. **Start development server**:
    ```bash
    npm run dev
    ```
 
-3. **Build for production**:
+4. **Production build**:
    ```bash
    npm run build
    ```
 
-4. **Preview the production build**:
+5. **Preview production build**:
    ```bash
    npm run preview
    ```
@@ -71,4 +75,4 @@ A modern esports leaderboard and single-elimination tournament management web ap
 ## 🛡️ Default Admin Credentials
 
 - **Admin PIN**: `1234` (or `admin`)
-- Can be customized anytime under the **Admin Hub > Tournament Configuration** tab.
+- Editable in **Admin Hub > Competition Info & Security PIN**.

@@ -1,12 +1,37 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Team, LeaderboardEntry, BracketData, TournamentSettings, RosterDisplayMode } from '../types';
-import { INITIAL_TEAMS, INITIAL_SETTINGS, generateInitialBracket } from '../data/initialData';
+import type {
+  Team,
+  LeaderboardEntry,
+  BracketData,
+  TournamentSettings,
+  TournamentScoringSettings,
+  RosterDisplayMode,
+  GameResult,
+  GameLeaderboardEntry,
+} from '../types';
+import {
+  INITIAL_TEAMS,
+  INITIAL_SETTINGS,
+  INITIAL_GAME_RESULTS,
+  SAMPLE_TEAMS,
+  SAMPLE_GAME_RESULTS,
+  generateInitialBracket,
+} from '../data/initialData';
 import { computeLeaderboard } from '../utils/leaderboardUtils';
 import { generateSingleEliminationBracket, updateBracketMatch as updateMatchHelper } from '../utils/bracketUtils';
+import {
+  calculateGamePoints,
+  recalculateGameResult,
+  computeGameLeaderboard,
+  validateGameResultInput,
+  DEFAULT_SCORING_SETTINGS,
+} from '../utils/scoringUtils';
 
 interface TournamentContextType {
   teams: Team[];
   leaderboard: LeaderboardEntry[];
+  gameResults: GameResult[];
+  gameLeaderboard: GameLeaderboardEntry[];
   bracket: BracketData;
   settings: TournamentSettings;
   isAdmin: boolean;
@@ -22,6 +47,7 @@ interface TournamentContextType {
   deleteTeam: (id: string) => void;
   quickAdjustPoints: (id: string, delta: number) => void;
   resetLeaderboardPoints: () => void;
+  clearAllData: () => void;
   resetToDefaultData: () => void;
   updateBracketMatch: (
     matchId: string,
@@ -36,21 +62,69 @@ interface TournamentContextType {
   ) => void;
   regenerateBracket: (size: 4 | 8 | 16, selectedTeamIds: string[], hasThirdPlace: boolean) => void;
   updateSettings: (updates: Partial<TournamentSettings>) => void;
+  updateScoringSettings: (updates: Partial<TournamentScoringSettings>) => void;
+  saveGameResult: (
+    teamId: string,
+    gameNumber: number,
+    kills: number,
+    placement: number | undefined,
+    chickenDinner: boolean
+  ) => { success: boolean; error?: string };
+  deleteGameResult: (resultId: string) => boolean;
   showToast: (message: string) => void;
 }
 
 const STORAGE_KEYS = {
-  TEAMS: 'ros_legacy_teams_v1',
-  BRACKET: 'ros_legacy_bracket_v1',
-  SETTINGS: 'ros_legacy_settings_v1',
-  ROSTER_MODE: 'ros_legacy_roster_mode_v1',
-  IS_ADMIN: 'ros_legacy_is_admin_v1',
+  TEAMS: 'ros_legacy_teams_v2',
+  BRACKET: 'ros_legacy_bracket_v2',
+  SETTINGS: 'ros_legacy_settings_v2',
+  GAME_RESULTS: 'ros_legacy_game_results_v2',
+  ROSTER_MODE: 'ros_legacy_roster_mode_v2',
+  IS_ADMIN: 'ros_legacy_is_admin_v2',
 };
+
+// Cleanup old v1 demo caches
+try {
+  localStorage.removeItem('ros_legacy_teams_v1');
+  localStorage.removeItem('ros_legacy_game_results_v1');
+  localStorage.removeItem('ros_legacy_bracket_v1');
+  localStorage.removeItem('ros_legacy_settings_v1');
+} catch (e) {
+  // ignore
+}
 
 const TournamentContext = createContext<TournamentContextType | null>(null);
 
 export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Load initial teams from localStorage or default
+  // Settings
+  const [settings, setSettings] = useState<TournamentSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (!parsed.scoring) {
+          parsed.scoring = DEFAULT_SCORING_SETTINGS;
+        }
+        return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to parse saved settings', e);
+    }
+    return INITIAL_SETTINGS;
+  });
+
+  // Game results: starts empty
+  const [gameResults, setGameResults] = useState<GameResult[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.GAME_RESULTS);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse saved game results', e);
+    }
+    return INITIAL_GAME_RESULTS;
+  });
+
+  // Teams: starts empty
   const [teams, setTeams] = useState<Team[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TEAMS);
@@ -61,18 +135,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return INITIAL_TEAMS;
   });
 
-  // Settings
-  const [settings, setSettings] = useState<TournamentSettings>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error('Failed to parse saved settings', e);
-    }
-    return INITIAL_SETTINGS;
-  });
-
-  // Bracket
+  // Bracket: starts empty
   const [bracket, setBracket] = useState<BracketData>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.BRACKET);
@@ -80,7 +143,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch (e) {
       console.error('Failed to parse saved bracket', e);
     }
-    return generateInitialBracket(INITIAL_TEAMS);
+    return generateInitialBracket([]);
   });
 
   // Roster display mode: default 'hover'
@@ -94,7 +157,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return 'hover';
   });
 
-  // Admin status: default true for easy demo access, but full lock/guest support
+  // Admin status: default true for easy access
   const [isAdmin, setIsAdmin] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.IS_ADMIN);
@@ -102,7 +165,7 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     } catch {
       // ignore
     }
-    return true; // Default admin enabled so testers can immediately test admin tools
+    return true;
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -131,6 +194,14 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       console.error(e);
     }
   }, [settings]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.GAME_RESULTS, JSON.stringify(gameResults));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [gameResults]);
 
   useEffect(() => {
     try {
@@ -172,23 +243,72 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     showToast('Switched to Guest (View Only) Mode.');
   };
 
-  // Computed Leaderboard with auto-ranking and tie handling
+  // Computed game-by-game tournament matrix leaderboard
+  const gameLeaderboard = useMemo(() => {
+    return computeGameLeaderboard(teams, gameResults, settings.scoring?.totalGames || 5);
+  }, [teams, gameResults, settings.scoring?.totalGames]);
+
+  // Synchronize team totals from gameResults
+  useEffect(() => {
+    const totalsByTeam = new Map<string, { points: number; kills: number; wins: number }>();
+    gameResults.forEach((gr) => {
+      const current = totalsByTeam.get(gr.teamId) || { points: 0, kills: 0, wins: 0 };
+      current.points += gr.totalPoints;
+      current.kills += gr.kills;
+      if (gr.chickenDinner) current.wins += 1;
+      totalsByTeam.set(gr.teamId, current);
+    });
+
+    setTeams((prevTeams) => {
+      let hasChanged = false;
+      const updated = prevTeams.map((team) => {
+        const recorded = totalsByTeam.get(team.id);
+        if (recorded) {
+          if (
+            team.points !== recorded.points ||
+            team.kills !== recorded.kills ||
+            team.wins !== recorded.wins
+          ) {
+            hasChanged = true;
+            return {
+              ...team,
+              points: recorded.points,
+              kills: recorded.kills,
+              wins: recorded.wins,
+            };
+          }
+        }
+        return team;
+      });
+      return hasChanged ? updated : prevTeams;
+    });
+  }, [gameResults]);
+
+  // Computed Overall Leaderboard
   const leaderboard = useMemo(() => {
     return computeLeaderboard(teams);
   }, [teams]);
 
-  // Actions
+  // Team Actions
   const addTeam = (teamData: Omit<Team, 'id'>) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     const newId = `team-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const newTeam: Team = {
       ...teamData,
       id: newId,
     };
     setTeams((prev) => [...prev, newTeam]);
-    showToast(`Team "${newTeam.name}" added to leaderboard!`);
+    showToast(`Team "${newTeam.name}" added to tournament!`);
   };
 
   const updateTeam = (id: string, updates: Partial<Team>) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     setTeams((prev) =>
       prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
@@ -196,12 +316,21 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const deleteTeam = (id: string) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     const target = teams.find((t) => t.id === id);
     setTeams((prev) => prev.filter((t) => t.id !== id));
+    setGameResults((prev) => prev.filter((gr) => gr.teamId !== id));
     showToast(`Team "${target?.name || ''}" removed.`);
   };
 
   const quickAdjustPoints = (id: string, delta: number) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     setTeams((prev) =>
       prev.map((t) => {
         if (t.id === id) {
@@ -214,6 +343,11 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const resetLeaderboardPoints = () => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
+    setGameResults([]);
     setTeams((prev) =>
       prev.map((t) => ({
         ...t,
@@ -223,16 +357,42 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         matchesPlayed: 0,
       }))
     );
-    showToast('Leaderboard points reset to 0 for new competition!');
+    showToast('All scores & game results reset to 0.');
   };
 
+  // Complete wipe: fresh slate with 0 teams, 0 games, 0 brackets
+  const clearAllData = () => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
+    setTeams([]);
+    setGameResults([]);
+    setBracket(generateInitialBracket([]));
+    try {
+      localStorage.removeItem(STORAGE_KEYS.TEAMS);
+      localStorage.removeItem(STORAGE_KEYS.GAME_RESULTS);
+      localStorage.removeItem(STORAGE_KEYS.BRACKET);
+    } catch (e) {
+      console.error(e);
+    }
+    showToast('All data deleted! Starting with a clean slate.');
+  };
+
+  // Optional restore of sample data if needed
   const resetToDefaultData = () => {
-    setTeams(INITIAL_TEAMS);
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
+    setTeams(SAMPLE_TEAMS);
     setSettings(INITIAL_SETTINGS);
-    setBracket(generateInitialBracket(INITIAL_TEAMS));
-    showToast('Reset to default ROS Legacy community data!');
+    setGameResults(SAMPLE_GAME_RESULTS);
+    setBracket(generateInitialBracket(SAMPLE_TEAMS));
+    showToast('Restored sample ROS Legacy demo data (Zenith, Kinos, Krex)!');
   };
 
+  // Bracket Actions
   const updateBracketMatchHandler = (
     matchId: string,
     updates: {
@@ -244,6 +404,10 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       team2Id?: string | null;
     }
   ) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     setBracket((prev) => updateMatchHelper(prev, matchId, updates));
     showToast('Match updated & bracket advanced!');
   };
@@ -253,6 +417,10 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     selectedTeamIds: string[],
     hasThirdPlace: boolean
   ) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     const selectedTeams: Team[] = [];
     selectedTeamIds.forEach((id) => {
       const match = teams.find((t) => t.id === id);
@@ -270,8 +438,128 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateSettings = (updates: Partial<TournamentSettings>) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
     setSettings((prev) => ({ ...prev, ...updates }));
     showToast('Tournament settings saved!');
+  };
+
+  const updateScoringSettings = (updates: Partial<TournamentScoringSettings>) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
+
+    const currentScoring = settings.scoring || DEFAULT_SCORING_SETTINGS;
+    const newScoring: TournamentScoringSettings = {
+      ...currentScoring,
+      ...updates,
+      pointsPerKill:
+        updates.pointsPerKill !== undefined ? Math.max(0, updates.pointsPerKill) : currentScoring.pointsPerKill,
+      chickenDinnerBonus:
+        updates.chickenDinnerBonus !== undefined
+          ? Math.max(0, updates.chickenDinnerBonus)
+          : currentScoring.chickenDinnerBonus,
+      totalGames:
+        updates.totalGames !== undefined ? Math.max(1, updates.totalGames) : currentScoring.totalGames,
+      placementPoints: updates.placementPoints || currentScoring.placementPoints,
+    };
+
+    setSettings((prev) => ({
+      ...prev,
+      pointsPerKill: newScoring.pointsPerKill,
+      pointsForChickenDinner: newScoring.chickenDinnerBonus,
+      scoring: newScoring,
+    }));
+
+    setGameResults((prevResults) => {
+      const recalculated = prevResults.map((r) => recalculateGameResult(r, newScoring));
+      return recalculated;
+    });
+
+    showToast('Scoring settings updated! Standings recalculated.');
+  };
+
+  const saveGameResult = (
+    teamId: string,
+    gameNumber: number,
+    kills: number,
+    placement: number | undefined,
+    chickenDinner: boolean
+  ): { success: boolean; error?: string } => {
+    if (!isAdmin) {
+      const msg = 'Action restricted: Only administrators can record game results.';
+      showToast(msg);
+      return { success: false, error: msg };
+    }
+
+    const targetTeam = teams.find((t) => t.id === teamId);
+    if (!targetTeam) {
+      const msg = 'Selected team was not found in the tournament.';
+      showToast(msg);
+      return { success: false, error: msg };
+    }
+
+    const currentScoring = settings.scoring || DEFAULT_SCORING_SETTINGS;
+    const validation = validateGameResultInput(teamId, gameNumber, kills, placement, teams, currentScoring);
+    if (!validation.isValid) {
+      showToast(validation.error || 'Invalid result input.');
+      return { success: false, error: validation.error };
+    }
+
+    const { killPoints, placementPoints, chickenDinnerBonus, totalPoints } = calculateGamePoints(
+      kills,
+      placement,
+      chickenDinner,
+      currentScoring
+    );
+
+    const existingIndex = gameResults.findIndex(
+      (r) => r.teamId === teamId && r.gameNumber === gameNumber
+    );
+
+    const updatedResult: GameResult = {
+      id: existingIndex >= 0 ? gameResults[existingIndex].id : `gr_${teamId}_g${gameNumber}`,
+      teamId,
+      teamName: targetTeam.name,
+      gameNumber,
+      kills,
+      placement,
+      chickenDinner,
+      killPoints,
+      placementPoints,
+      chickenDinnerBonus,
+      totalPoints,
+      updatedAt: Date.now(),
+    };
+
+    setGameResults((prev) => {
+      if (existingIndex >= 0) {
+        const clone = [...prev];
+        clone[existingIndex] = updatedResult;
+        return clone;
+      } else {
+        return [...prev, updatedResult];
+      }
+    });
+
+    showToast(`${targetTeam.name} — Game ${gameNumber} saved! (${totalPoints} pts)`);
+    return { success: true };
+  };
+
+  const deleteGameResult = (resultId: string): boolean => {
+    if (!isAdmin) {
+      showToast('Action restricted: Only administrators can delete game results.');
+      return false;
+    }
+    const target = gameResults.find((r) => r.id === resultId);
+    if (!target) return false;
+
+    setGameResults((prev) => prev.filter((r) => r.id !== resultId));
+    showToast(`Deleted Game ${target.gameNumber} result for ${target.teamName}.`);
+    return true;
   };
 
   return (
@@ -279,6 +567,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       value={{
         teams,
         leaderboard,
+        gameResults,
+        gameLeaderboard,
         bracket,
         settings,
         isAdmin,
@@ -294,10 +584,14 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         deleteTeam,
         quickAdjustPoints,
         resetLeaderboardPoints,
+        clearAllData,
         resetToDefaultData,
         updateBracketMatch: updateBracketMatchHandler,
         regenerateBracket,
         updateSettings,
+        updateScoringSettings,
+        saveGameResult,
+        deleteGameResult,
         showToast,
       }}
     >
@@ -313,4 +607,3 @@ export const useTournament = () => {
   }
   return context;
 };
-

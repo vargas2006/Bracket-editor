@@ -1,4 +1,4 @@
-import { Team, LeaderboardEntry } from '../types';
+import { Team, LeaderboardEntry, GameLeaderboardEntry } from '../types';
 
 /**
  * Computes standard competition ranking (1224 rule) based purely on points.
@@ -6,7 +6,6 @@ import { Team, LeaderboardEntry } from '../types';
  * If points are identical, both teams receive the same placement number.
  */
 export function computeLeaderboard(teams: Team[]): LeaderboardEntry[] {
-  // Sort teams primarily by points descending, secondarily by kills, then wins
   const sorted = [...teams].sort((a, b) => {
     if (b.points !== a.points) {
       return b.points - a.points;
@@ -27,7 +26,6 @@ export function computeLeaderboard(teams: Team[]): LeaderboardEntry[] {
     const currentTeam = sorted[i];
 
     if (i > 0 && currentTeam.points === sorted[i - 1].points) {
-      // Tied with previous team: same placement
       const prevPlacement = result[i - 1].placement;
       result[i - 1].isTied = true;
       result.push({
@@ -46,7 +44,6 @@ export function computeLeaderboard(teams: Team[]): LeaderboardEntry[] {
     }
   }
 
-  // Also verify if current is tied with next
   for (let i = 0; i < result.length - 1; i++) {
     if (result[i].points === result[i + 1].points) {
       result[i].isTied = true;
@@ -74,28 +71,58 @@ export function formatPrize(prize?: string): string {
 }
 
 /**
- * Generates and downloads a CSV of the leaderboard
+ * Generates and downloads a CSV of the leaderboard with Game 1, Game 2, etc. columns
  */
-export function exportToCSV(entries: LeaderboardEntry[], competitionName: string) {
-  const headers = ['Placement', 'Team Name', 'Tag', 'Points', 'Prize', 'Wins', 'Kills', 'Captain', 'Players'];
-  
-  const rows = entries.map((e) => {
-    const captain = e.members.find((m) => m.isCaptain)?.ign || 'N/A';
-    const playerList = e.members.map((m) => m.ign + (m.isCaptain ? ' (C)' : '')).join('; ');
-    const prize = formatPrize(e.prize);
-    
-    return [
-      `"${formatOrdinal(e.placement)}${e.isTied ? ' (Tied)' : ''}"`,
-      `"${e.name.replace(/"/g, '""')}"`,
-      `"${e.tag || ''}"`,
-      e.points,
-      `"${prize.replace(/"/g, '""')}"`,
-      e.wins ?? 0,
-      e.kills ?? 0,
-      `"${captain.replace(/"/g, '""')}"`,
-      `"${playerList.replace(/"/g, '""')}"`,
-    ].join(',');
-  });
+export function exportToCSV(
+  entries: LeaderboardEntry[],
+  competitionName: string,
+  gameEntries?: GameLeaderboardEntry[],
+  totalGames: number = 5
+) {
+  let headers: string[] = [];
+  let rows: string[] = [];
+
+  if (gameEntries && gameEntries.length > 0) {
+    const gameCols = Array.from({ length: totalGames }, (_, i) => `Game ${i + 1}`);
+    headers = ['Rank', 'Team Name', 'Tag', ...gameCols, 'Total Points', 'Total Kills', 'Chicken Dinners', 'Prize', 'Players'];
+
+    rows = gameEntries.map((e) => {
+      const gameScores = Array.from({ length: totalGames }, (_, i) => e.gameScores[i + 1] ?? 0);
+      const playerList = e.members.map((m) => m.ign + (m.isCaptain ? ' (C)' : '')).join('; ');
+      const prize = formatPrize(e.prize);
+
+      return [
+        `"${formatOrdinal(e.rank)}${e.isTied ? ' (Tied)' : ''}"`,
+        `"${e.teamName.replace(/"/g, '""')}"`,
+        `"${e.tag || ''}"`,
+        ...gameScores,
+        e.totalPoints,
+        e.totalKills,
+        e.totalChickenDinners,
+        `"${prize.replace(/"/g, '""')}"`,
+        `"${playerList.replace(/"/g, '""')}"`,
+      ].join(',');
+    });
+  } else {
+    headers = ['Placement', 'Team Name', 'Tag', 'Points', 'Prize', 'Wins', 'Kills', 'Captain', 'Players'];
+    rows = entries.map((e) => {
+      const captain = e.members.find((m) => m.isCaptain)?.ign || 'N/A';
+      const playerList = e.members.map((m) => m.ign + (m.isCaptain ? ' (C)' : '')).join('; ');
+      const prize = formatPrize(e.prize);
+
+      return [
+        `"${formatOrdinal(e.placement)}${e.isTied ? ' (Tied)' : ''}"`,
+        `"${e.name.replace(/"/g, '""')}"`,
+        `"${e.tag || ''}"`,
+        e.points,
+        `"${prize.replace(/"/g, '""')}"`,
+        e.wins ?? 0,
+        e.kills ?? 0,
+        `"${captain.replace(/"/g, '""')}"`,
+        `"${playerList.replace(/"/g, '""')}"`,
+      ].join(',');
+    });
+  }
 
   const csvContent = [headers.join(','), ...rows].join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -109,4 +136,3 @@ export function exportToCSV(entries: LeaderboardEntry[], competitionName: string
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 }
-
