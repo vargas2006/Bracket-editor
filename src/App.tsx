@@ -6,6 +6,7 @@ import { TournamentBracket } from './components/Bracket/TournamentBracket';
 import { TeamsPage } from './components/Teams/TeamsPage';
 import { AdminPanel } from './components/Admin/AdminPanel';
 import { Toast } from './components/Common/Toast';
+import { BrowserStorageNoticeModal } from './components/Common/BrowserStorageNoticeModal';
 import { DiscordIcon } from './components/Common/DiscordIcon';
 import {
   Flame,
@@ -17,6 +18,13 @@ import {
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'leaderboard' | 'bracket' | 'teams' | 'admin'>('leaderboard');
+  const [isStorageNoticeOpen, setIsStorageNoticeOpen] = useState(() => {
+    try {
+      return localStorage.getItem('ros_storage_reminder_dismissed') !== 'true';
+    } catch {
+      return true;
+    }
+  });
   const { settings, leaderboard, teams } = useTournament();
 
   const totalPoints = teams.reduce((acc, t) => acc + t.points, 0);
@@ -128,10 +136,23 @@ const AppContent: React.FC = () => {
             <span>•</span>
             <span>Admin PIN: 1234</span>
             <span>•</span>
-            <span>Autosave Active</span>
+            <button
+              type="button"
+              onClick={() => setIsStorageNoticeOpen(true)}
+              className="hover:text-amber-400 hover:underline flex items-center gap-1 transition-colors text-slate-400 font-mono text-[11px]"
+              title="Tingnan ang Browser Storage Paalala"
+            >
+              <span>Autosave Active (Paalala)</span>
+            </button>
           </div>
         </div>
       </footer>
+
+      {/* Browser Local Storage Warning Modal */}
+      <BrowserStorageNoticeModal
+        isOpen={isStorageNoticeOpen}
+        onClose={() => setIsStorageNoticeOpen(false)}
+      />
 
       {/* Global Toast */}
       <Toast />

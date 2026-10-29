@@ -228,7 +228,7 @@ export const LeaderboardTable: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
                     <Trophy className="w-3.5 h-3.5" />
-                    Tournament Leader
+                    1st Place
                   </span>
                   {top1.isTied && (
                     <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1 rounded border border-amber-500/30">
