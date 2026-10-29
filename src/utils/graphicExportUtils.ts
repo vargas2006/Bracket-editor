@@ -40,7 +40,6 @@ export function drawRoundedRect(
   ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
   ctx.lineTo(x + bl, y + height);
   ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
-  ctx.lineTo(x + y, y); // fallback safe
   ctx.lineTo(x, y + tl);
   ctx.quadraticCurveTo(x, y, x + tl, y);
   ctx.closePath();
@@ -76,7 +75,8 @@ export function truncateText(
 }
 
 /**
- * Renders the high-definition tournament graphic leaderboard onto a canvas.
+ * Renders the clean, high-definition tournament graphic leaderboard onto a canvas.
+ * Clean, sharp, solid colors with zero color-bleeding or blurred gradients.
  */
 export function renderLeaderboardToCanvas(
   canvas: HTMLCanvasElement,
@@ -100,17 +100,17 @@ export function renderLeaderboardToCanvas(
   const showScoringRules = options.showScoringRules;
 
   // Layout sizing
-  const headerHeight = 180;
-  const podiumHeight = showPodium ? 128 : 0;
-  const scoringRulesHeight = showScoringRules ? 52 : 0;
-  const tableHeaderHeight = 48;
-  const rowHeight = 62;
-  const footerHeight = 70;
-  const spacingBetweenSections = 18;
+  const headerHeight = 175;
+  const podiumHeight = showPodium ? 124 : 0;
+  const scoringRulesHeight = showScoringRules ? 48 : 0;
+  const tableHeaderHeight = 46;
+  const rowHeight = 60;
+  const footerHeight = 65;
+  const spacingBetweenSections = 16;
 
   const tableBodyHeight = hasTeams
     ? displayEntries.length * rowHeight
-    : 140; // empty state height
+    : 130; // empty state height
 
   const totalHeight =
     headerHeight +
@@ -120,7 +120,7 @@ export function renderLeaderboardToCanvas(
     tableBodyHeight +
     spacingBetweenSections +
     footerHeight +
-    30; // bottom margin
+    25; // bottom margin
 
   canvas.width = width;
   canvas.height = totalHeight;
@@ -128,98 +128,37 @@ export function renderLeaderboardToCanvas(
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Enable crisp text rendering
+  // Crisp text rendering
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  // 1. Deep Esports Dark Background
-  const bgGrad = ctx.createLinearGradient(0, 0, width, totalHeight);
-  bgGrad.addColorStop(0, '#090c14');
-  bgGrad.addColorStop(0.3, '#0e121d');
-  bgGrad.addColorStop(0.7, '#101422');
-  bgGrad.addColorStop(1, '#06080e');
-  ctx.fillStyle = bgGrad;
+  // 1. SOLID CLEAN DARK BACKGROUND (No fuzzy radial gradients or color bleeding)
+  ctx.fillStyle = '#0b0e14';
   ctx.fillRect(0, 0, width, totalHeight);
 
-  // Subtle ambient glows in corners
-  // Top right subtle crimson glow
-  const glowRight = ctx.createRadialGradient(width - 100, 100, 20, width - 100, 100, 500);
-  glowRight.addColorStop(0, 'rgba(225, 29, 72, 0.12)');
-  glowRight.addColorStop(1, 'rgba(225, 29, 72, 0)');
-  ctx.fillStyle = glowRight;
-  ctx.fillRect(0, 0, width, totalHeight);
-
-  // Top left subtle indigo glow
-  const glowLeft = ctx.createRadialGradient(100, 100, 20, 100, 100, 500);
-  glowLeft.addColorStop(0, 'rgba(59, 130, 246, 0.08)');
-  glowLeft.addColorStop(1, 'rgba(59, 130, 246, 0)');
-  ctx.fillStyle = glowLeft;
-  ctx.fillRect(0, 0, width, totalHeight);
-
-  // Subtle cyber grid pattern
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.018)';
-  ctx.lineWidth = 1;
-  const gridSize = 40;
-  for (let x = 0; x < width; x += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, totalHeight);
-    ctx.stroke();
-  }
-  for (let y = 0; y < totalHeight; y += gridSize) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
-
-  // 2. Outer Glowing Frame
-  const borderGrad = ctx.createLinearGradient(0, 0, width, totalHeight);
-  borderGrad.addColorStop(0, '#e11d48');
-  borderGrad.addColorStop(0.5, '#475569');
-  borderGrad.addColorStop(1, '#f59e0b');
-  drawRoundedRect(ctx, 4, 4, width - 8, totalHeight - 8, 16, undefined, borderGrad, 3);
-
-  // Inner subtle accent frame
-  drawRoundedRect(
-    ctx,
-    10,
-    10,
-    width - 20,
-    totalHeight - 20,
-    12,
-    undefined,
-    'rgba(255, 255, 255, 0.06)',
-    1
-  );
+  // 2. CLEAN OUTER FRAME
+  drawRoundedRect(ctx, 4, 4, width - 8, totalHeight - 8, 14, undefined, '#1e2538', 1.5);
 
   // 3. HEADER SECTION
-  let currentY = 50;
+  let currentY = 46;
 
-  // Pill badge: ⚔️ RULES OF SURVIVAL • ROS COMMUNITY
+  // Header Badge Pill: ⚔️ RULES OF SURVIVAL • ROS COMMUNITY
   const badgeText = '⚔️ RULES OF SURVIVAL • ROS COMMUNITY';
   ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const badgeWidth = ctx.measureText(badgeText).width + 36;
+  const badgeWidth = ctx.measureText(badgeText).width + 30;
   drawRoundedRect(
     ctx,
     paddingX,
     currentY,
     badgeWidth,
     26,
-    13,
-    'rgba(225, 29, 72, 0.15)',
-    'rgba(225, 29, 72, 0.4)',
+    6,
+    '#161b26',
+    '#2d3748',
     1
   );
-  // Red dot
   ctx.fillStyle = '#f43f5e';
-  ctx.beginPath();
-  ctx.arc(paddingX + 16, currentY + 13, 4, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#fb7185';
-  ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText(badgeText, paddingX + 26, currentY + 17);
+  ctx.fillText(badgeText, paddingX + 15, currentY + 17);
 
   // Header Right: Date & Verification Pill
   const dateStr = new Date().toLocaleDateString('en-US', {
@@ -236,26 +175,26 @@ export function renderLeaderboardToCanvas(
     dateWidth,
     26,
     6,
-    'rgba(15, 23, 42, 0.8)',
-    'rgba(51, 65, 85, 0.6)',
+    '#161b26',
+    '#2d3748',
     1
   );
   ctx.fillStyle = '#94a3b8';
   ctx.fillText(`VERIFIED: ${dateStr}`, width - paddingX - dateWidth + 12, currentY + 17);
 
-  currentY += 46;
+  currentY += 44;
 
-  // Main Tournament Title
+  // Main Tournament Title (Clean solid white)
   ctx.fillStyle = '#ffffff';
-  ctx.font = '900 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.font = '900 36px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const competitionTitle = (settings.competitionName || 'RULES OF SURVIVAL').toUpperCase();
   ctx.fillText(competitionTitle, paddingX, currentY);
 
   // Subtitle + Metadata Tags
-  currentY += 30;
+  currentY += 28;
   ctx.fillStyle = '#94a3b8';
-  ctx.font = '600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const subtitle = `${(settings.seasonOrStage || 'ROS COMMUNITY TOURNAMENT').toUpperCase()} • TOURNAMENT STANDINGS & MATCH RESULTS`;
+  ctx.font = '600 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  const subtitle = `${(settings.seasonOrStage || 'ROS COMMUNITY TOURNAMENT').toUpperCase()} • STANDINGS & MATCH RESULTS`;
   ctx.fillText(subtitle, paddingX, currentY);
 
   // Scoring Settings Values
@@ -264,7 +203,7 @@ export function renderLeaderboardToCanvas(
   const cdBonus = scoring?.chickenDinnerBonus ?? settings.pointsForChickenDinner ?? 25;
   const prizes = settings.prizes;
 
-  // Right-aligned stats badges
+  // Right-aligned stats badges (Clean solid dark badges)
   const statTags = [
     `🎮 ${totalGames} GAMES`,
     `⚔️ ${ptsPerKill} PTS/KILL`,
@@ -284,9 +223,9 @@ export function renderLeaderboardToCanvas(
       currentY - 18,
       tw,
       24,
-      6,
-      'rgba(15, 23, 42, 0.8)',
-      'rgba(51, 65, 85, 0.6)',
+      5,
+      '#131722',
+      '#273042',
       1
     );
     ctx.fillStyle = '#cbd5e1';
@@ -294,9 +233,9 @@ export function renderLeaderboardToCanvas(
     tagX -= 8;
   }
 
-  currentY += 34;
+  currentY += 32;
 
-  // 4. TOP 3 PODIUM CARDS BANNER (if enabled and at least 1 team)
+  // 4. TOP 3 PODIUM CARDS BANNER (Clean solid cards, no fuzzy color glow)
   if (showPodium) {
     const top1 = options.mode === 'gameMatrix' ? gameEntries[0] : entries[0];
     const top2 = options.mode === 'gameMatrix' ? gameEntries[1] : entries[1];
@@ -305,9 +244,9 @@ export function renderLeaderboardToCanvas(
     const cardGap = 16;
     const cardWidth = (contentWidth - cardGap * 2) / 3;
     const cardY = currentY;
-    const cardHeight = 126;
+    const cardHeight = 124;
 
-    // Helper to draw a single podium card
+    // Helper to draw a clean podium card
     const drawPodiumCard = (
       cardX: number,
       cardYPos: number,
@@ -334,64 +273,42 @@ export function renderLeaderboardToCanvas(
           ? prizes?.top2 || '₱200'
           : prizes?.top3 || '₱100';
 
-      let borderColor = 'rgba(51, 65, 85, 0.6)';
-      let glowColor = 'rgba(0, 0, 0, 0)';
-      let labelBg = 'rgba(15, 23, 42, 0.8)';
+      let borderColor = '#2d3748';
+      let cardBg = '#111522';
+      let labelBg = '#161d2d';
       let labelText = '#94a3b8';
       let titleLabel = `${formatOrdinal(place).toUpperCase()} PLACE`;
       let pointsColor = '#ffffff';
 
       if (place === 1) {
-        borderColor = 'rgba(245, 158, 11, 0.8)';
-        glowColor = 'rgba(245, 158, 11, 0.2)';
-        labelBg = 'rgba(245, 158, 11, 0.2)';
+        borderColor = '#d97706';
+        cardBg = '#141a29';
+        labelBg = '#261e12';
         labelText = '#fbbf24';
-        titleLabel = '👑 TOURNAMENT LEADER';
+        titleLabel = '👑 1ST PLACE CHAMPION';
         pointsColor = '#fbbf24';
       } else if (place === 2) {
-        borderColor = 'rgba(203, 213, 225, 0.6)';
-        glowColor = 'rgba(203, 213, 225, 0.12)';
-        labelBg = 'rgba(203, 213, 225, 0.15)';
-        labelText = '#e2e8f0';
+        borderColor = '#475569';
+        cardBg = '#111522';
+        labelBg = '#1a2233';
+        labelText = '#cbd5e1';
         titleLabel = '🥈 2ND PLACE';
         pointsColor = '#e2e8f0';
       } else if (place === 3) {
-        borderColor = 'rgba(217, 119, 6, 0.6)';
-        glowColor = 'rgba(217, 119, 6, 0.12)';
-        labelBg = 'rgba(217, 119, 6, 0.15)';
+        borderColor = '#78350f';
+        cardBg = '#111522';
+        labelBg = '#221910';
         labelText = '#f59e0b';
         titleLabel = '🥉 3RD PLACE';
         pointsColor = '#f59e0b';
       }
 
-      // Card Background with radial glow
-      const cardGrad = ctx.createLinearGradient(cardX, cardYPos, cardX, cardYPos + cardH);
-      if (place === 1) {
-        cardGrad.addColorStop(0, 'rgba(245, 158, 11, 0.16)');
-        cardGrad.addColorStop(0.5, 'rgba(20, 24, 38, 0.95)');
-        cardGrad.addColorStop(1, 'rgba(12, 15, 25, 0.95)');
-      } else if (place === 2) {
-        cardGrad.addColorStop(0, 'rgba(148, 163, 184, 0.12)');
-        cardGrad.addColorStop(0.5, 'rgba(20, 24, 38, 0.95)');
-        cardGrad.addColorStop(1, 'rgba(12, 15, 25, 0.95)');
-      } else {
-        cardGrad.addColorStop(0, 'rgba(180, 83, 9, 0.12)');
-        cardGrad.addColorStop(0.5, 'rgba(20, 24, 38, 0.95)');
-        cardGrad.addColorStop(1, 'rgba(12, 15, 25, 0.95)');
-      }
+      // Draw clean solid card (NO radial glow or blurred leaks)
+      drawRoundedRect(ctx, cardX, cardYPos, cardW, cardH, 12, cardBg, borderColor, place === 1 ? 2 : 1);
 
-      drawRoundedRect(ctx, cardX, cardYPos, cardW, cardH, 14, cardGrad, borderColor, place === 1 ? 2.5 : 1.5);
-
-      // Top corner glow
-      const cornerGlow = ctx.createRadialGradient(cardX + cardW - 30, cardYPos + 30, 10, cardX + cardW - 30, cardYPos + 30, 120);
-      cornerGlow.addColorStop(0, glowColor);
-      cornerGlow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = cornerGlow;
-      ctx.fillRect(cardX, cardYPos, cardW, cardH);
-
-      // Logo Box
-      const logoBoxSize = 58;
-      const logoBoxX = cardX + 18;
+      // Logo Box (Clean solid dark box)
+      const logoBoxSize = 56;
+      const logoBoxX = cardX + 16;
       const logoBoxY = cardYPos + (cardH - logoBoxSize) / 2;
       drawRoundedRect(
         ctx,
@@ -399,59 +316,59 @@ export function renderLeaderboardToCanvas(
         logoBoxY,
         logoBoxSize,
         logoBoxSize,
-        12,
-        'rgba(15, 23, 42, 0.8)',
+        10,
+        '#0d101a',
         borderColor,
         1
       );
-      ctx.font = '28px sans-serif';
+      ctx.font = '26px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(logo, logoBoxX + logoBoxSize / 2, logoBoxY + logoBoxSize / 2 + 1);
 
       // Content Middle
-      const textX = logoBoxX + logoBoxSize + 16;
+      const textX = logoBoxX + logoBoxSize + 14;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
 
       // Placement Pill
       ctx.font = 'bold 11px monospace';
-      const labelW = ctx.measureText(titleLabel).width + 16;
-      drawRoundedRect(ctx, textX, cardYPos + 18, labelW, 20, 4, labelBg);
+      const labelW = ctx.measureText(titleLabel).width + 14;
+      drawRoundedRect(ctx, textX, cardYPos + 18, labelW, 19, 4, labelBg, borderColor, 0.5);
       ctx.fillStyle = labelText;
-      ctx.fillText(titleLabel, textX + 8, cardYPos + 32);
+      ctx.fillText(titleLabel, textX + 7, cardYPos + 32);
 
-      // Team Name
+      // Team Name (Clean bold white)
       ctx.fillStyle = '#ffffff';
-      ctx.font = place === 1 ? '900 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      const maxNameW = cardW - 220;
-      ctx.fillText(truncateText(ctx, teamName, maxNameW), textX, cardYPos + 58);
+      ctx.font = place === 1 ? '900 19px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : 'bold 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const maxNameW = cardW - 215;
+      ctx.fillText(truncateText(ctx, teamName, maxNameW), textX, cardYPos + 57);
 
       // Stats line: Kills • Chicken Dinners
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '600 12px monospace';
-      ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 78);
+      ctx.font = '600 11px monospace';
+      ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 76);
 
       // Prize Badge in Card
       if (prize && prize !== '—') {
         const prizeLabel = `🎁 PRIZE: ${prize}`;
         ctx.font = 'bold 11px monospace';
         const pw = ctx.measureText(prizeLabel).width + 12;
-        drawRoundedRect(ctx, textX, cardYPos + 89, pw, 19, 4, 'rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.4)', 1);
+        drawRoundedRect(ctx, textX, cardYPos + 87, pw, 18, 4, '#06291e', '#059669', 1);
         ctx.fillStyle = '#34d399';
-        ctx.fillText(prizeLabel, textX + 6, cardYPos + 103);
+        ctx.fillText(prizeLabel, textX + 6, cardYPos + 100);
       }
 
-      // Points on Right
-      const rightX = cardX + cardW - 20;
+      // Points on Right (Sharp monospace numbers)
+      const rightX = cardX + cardW - 18;
       ctx.textAlign = 'right';
       ctx.fillStyle = pointsColor;
-      ctx.font = place === 1 ? '900 32px monospace' : '800 28px monospace';
-      ctx.fillText(`${points}`, rightX, cardYPos + 64);
+      ctx.font = place === 1 ? '900 30px monospace' : '800 26px monospace';
+      ctx.fillText(`${points}`, rightX, cardYPos + 62);
 
       ctx.fillStyle = '#64748b';
       ctx.font = 'bold 10px monospace';
-      ctx.fillText('TOTAL PTS', rightX, cardYPos + 80);
+      ctx.fillText('TOTAL PTS', rightX, cardYPos + 78);
     };
 
     // Render 2nd, 1st, 3rd in classic podium order
@@ -462,10 +379,10 @@ export function renderLeaderboardToCanvas(
     currentY += cardHeight + spacingBetweenSections;
   }
 
-  // 5. OFFICIAL TOURNAMENT SCORING SYSTEM & RULES BANNER
+  // 5. TOURNAMENT SCORING SYSTEM & RULES BANNER (Solid, crisp banner)
   if (showScoringRules) {
     const bannerY = currentY;
-    const bannerH = 48;
+    const bannerH = 46;
 
     drawRoundedRect(
       ctx,
@@ -473,36 +390,36 @@ export function renderLeaderboardToCanvas(
       bannerY,
       contentWidth,
       bannerH,
-      12,
-      '#0f1422',
+      10,
+      '#101422',
       '#1e2538',
-      1.5
+      1
     );
 
     // Left Tag: SCORING RULES
     const tagX = paddingX + 16;
-    drawRoundedRect(ctx, tagX, bannerY + 11, 130, 26, 6, 'rgba(225, 29, 72, 0.2)', '#f43f5e', 1);
-    ctx.fillStyle = '#fb7185';
+    drawRoundedRect(ctx, tagX, bannerY + 10, 124, 26, 5, '#161b26', '#2d3748', 1);
+    ctx.fillStyle = '#f43f5e';
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('⚡ SCORING RULES', tagX + 65, bannerY + 24);
+    ctx.fillText('⚡ SCORING RULES', tagX + 62, bannerY + 23);
 
     // Rule items
-    const rulesStartY = bannerY + 24;
+    const rulesStartY = bannerY + 23;
     ctx.textBaseline = 'middle';
 
     // 1. Kill Points Rule
-    let curX = tagX + 148;
+    let curX = tagX + 142;
     ctx.textAlign = 'left';
     ctx.font = 'bold 12px monospace';
     ctx.fillStyle = '#ffffff';
     const killRuleText = `⚔️ KILLS: ${ptsPerKill} PTS / KILL`;
     ctx.fillText(killRuleText, curX, rulesStartY);
-    curX += ctx.measureText(killRuleText).width + 20;
+    curX += ctx.measureText(killRuleText).width + 18;
 
     // Divider
-    ctx.fillStyle = 'rgba(71, 85, 105, 0.6)';
+    ctx.fillStyle = '#475569';
     ctx.fillText('•', curX, rulesStartY);
     curX += 14;
 
@@ -510,10 +427,10 @@ export function renderLeaderboardToCanvas(
     ctx.fillStyle = '#fbbf24';
     const cdRuleText = `👑 CHICKEN DINNER: +${cdBonus} PTS`;
     ctx.fillText(cdRuleText, curX, rulesStartY);
-    curX += ctx.measureText(cdRuleText).width + 20;
+    curX += ctx.measureText(cdRuleText).width + 18;
 
     // Divider
-    ctx.fillStyle = 'rgba(71, 85, 105, 0.6)';
+    ctx.fillStyle = '#475569';
     ctx.fillText('•', curX, rulesStartY);
     curX += 14;
 
@@ -536,14 +453,14 @@ export function renderLeaderboardToCanvas(
     const prizeSummaryText = `🏆 PRIZES: 1st ${top1Prize}  •  2nd ${top2Prize}  •  3rd ${top3Prize}`;
 
     ctx.textAlign = 'right';
-    ctx.fillStyle = '#34d399';
+    ctx.fillStyle = '#10b981';
     ctx.font = 'bold 12px monospace';
     ctx.fillText(prizeSummaryText, paddingX + contentWidth - 18, rulesStartY);
 
     currentY += bannerH + spacingBetweenSections;
   }
 
-  // 6. THE LEADERBOARD TABLE CONTAINER
+  // 6. THE LEADERBOARD TABLE CONTAINER (Solid dark panel)
   const tableContainerY = currentY;
   const tableContainerHeight = tableHeaderHeight + tableBodyHeight;
 
@@ -553,8 +470,8 @@ export function renderLeaderboardToCanvas(
     tableContainerY,
     contentWidth,
     tableContainerHeight,
-    14,
-    '#0f131f',
+    12,
+    '#0e121e',
     '#1e2538',
     1.5
   );
@@ -611,15 +528,15 @@ export function renderLeaderboardToCanvas(
     columns.push({ key: 'points', label: 'POINTS', width: 160, align: 'right', headerX: paddingX + contentWidth - 30 });
   }
 
-  // Draw Table Header Bar
+  // Draw Table Header Bar (Solid dark surface)
   drawRoundedRect(
     ctx,
     paddingX,
     tableContainerY,
     contentWidth,
     tableHeaderHeight,
-    [14, 14, 0, 0],
-    '#131726',
+    [12, 12, 0, 0],
+    '#141926',
     '#1e2538',
     1
   );
@@ -634,7 +551,7 @@ export function renderLeaderboardToCanvas(
     ctx.fillText(col.label, col.headerX, tableContainerY + tableHeaderHeight / 2);
   }
 
-  // 7. RENDER ROWS
+  // 7. RENDER ROWS (Solid alternating backgrounds, clean text)
   let rowY = tableContainerY + tableHeaderHeight;
 
   if (!hasTeams) {
@@ -642,18 +559,18 @@ export function renderLeaderboardToCanvas(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.fillText(
       'NO TOURNAMENT TEAMS REGISTERED YET',
       paddingX + contentWidth / 2,
-      rowY + 50
+      rowY + 45
     );
-    ctx.font = '13px monospace';
+    ctx.font = '12px monospace';
     ctx.fillStyle = '#475569';
     ctx.fillText(
       'Add teams in the Teams or Admin tab to generate the tournament leaderboard graphic.',
       paddingX + contentWidth / 2,
-      rowY + 75
+      rowY + 70
     );
   } else {
     displayEntries.forEach((rawEntry, idx) => {
@@ -684,11 +601,11 @@ export function renderLeaderboardToCanvas(
           ? prizes?.top3 || '₱100'
           : '—';
 
-      // Row background
-      let rowBg = idx % 2 === 0 ? 'rgba(18, 23, 36, 0.7)' : 'rgba(13, 17, 27, 0.7)';
-      if (isTop1) rowBg = 'rgba(245, 158, 11, 0.08)';
-      else if (isTop2) rowBg = 'rgba(203, 213, 225, 0.05)';
-      else if (isTop3) rowBg = 'rgba(217, 119, 6, 0.05)';
+      // Clean solid row backgrounds (No bleeding colors)
+      let rowBg = idx % 2 === 0 ? '#101420' : '#0d101a';
+      if (isTop1) rowBg = '#141a28';
+      else if (isTop2) rowBg = '#111624';
+      else if (isTop3) rowBg = '#121520';
 
       drawRoundedRect(
         ctx,
@@ -696,14 +613,14 @@ export function renderLeaderboardToCanvas(
         rowY,
         contentWidth,
         rowHeight,
-        isLast ? [0, 0, 14, 14] : 0,
+        isLast ? [0, 0, 12, 12] : 0,
         rowBg,
         undefined
       );
 
-      // Bottom row divider line
+      // Clean subtle row divider line
       if (!isLast) {
-        ctx.strokeStyle = 'rgba(30, 41, 59, 0.7)';
+        ctx.strokeStyle = '#1a2233';
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(paddingX, rowY + rowHeight);
@@ -711,19 +628,19 @@ export function renderLeaderboardToCanvas(
         ctx.stroke();
       }
 
-      // Left Accent Strip for Top 3
+      // Left Accent Strip for Top 3 (Crisp clean bar)
       if (isTop1) {
-        drawRoundedRect(ctx, paddingX, rowY + 6, 5, rowHeight - 12, 3, '#f59e0b');
+        drawRoundedRect(ctx, paddingX, rowY + 6, 4, rowHeight - 12, 2, '#d97706');
       } else if (isTop2) {
-        drawRoundedRect(ctx, paddingX, rowY + 6, 5, rowHeight - 12, 3, '#cbd5e1');
+        drawRoundedRect(ctx, paddingX, rowY + 6, 4, rowHeight - 12, 2, '#94a3b8');
       } else if (isTop3) {
-        drawRoundedRect(ctx, paddingX, rowY + 6, 5, rowHeight - 12, 3, '#d97706');
+        drawRoundedRect(ctx, paddingX, rowY + 6, 4, rowHeight - 12, 2, '#b45309');
       }
 
       // 1. Placement / Rank Badge
       const rankCol = columns.find((c) => c.key === 'rank');
       if (rankCol) {
-        const badgeSize = 34;
+        const badgeSize = 32;
         const badgeX = rankCol.headerX - badgeSize / 2;
         const badgeY = rowY + (rowHeight - badgeSize) / 2;
 
@@ -734,9 +651,9 @@ export function renderLeaderboardToCanvas(
             badgeY,
             badgeSize,
             badgeSize,
-            8,
-            'rgba(245, 158, 11, 0.25)',
-            '#fbbf24',
+            7,
+            '#261e12',
+            '#d97706',
             1.5
           );
           ctx.textAlign = 'center';
@@ -751,9 +668,9 @@ export function renderLeaderboardToCanvas(
             badgeY,
             badgeSize,
             badgeSize,
-            8,
-            'rgba(203, 213, 225, 0.2)',
-            '#e2e8f0',
+            7,
+            '#1c2433',
+            '#94a3b8',
             1.5
           );
           ctx.textAlign = 'center';
@@ -768,9 +685,9 @@ export function renderLeaderboardToCanvas(
             badgeY,
             badgeSize,
             badgeSize,
-            8,
-            'rgba(217, 119, 6, 0.2)',
-            '#f59e0b',
+            7,
+            '#221910',
+            '#b45309',
             1.5
           );
           ctx.textAlign = 'center';
@@ -785,9 +702,9 @@ export function renderLeaderboardToCanvas(
             badgeY,
             badgeSize,
             badgeSize,
-            8,
-            'rgba(30, 41, 59, 0.6)',
-            'rgba(71, 85, 105, 0.5)',
+            7,
+            '#151b26',
+            '#273042',
             1
           );
           ctx.textAlign = 'center';
@@ -804,7 +721,7 @@ export function renderLeaderboardToCanvas(
         const teamX = teamCol.headerX;
 
         // Avatar
-        const avatarSize = 36;
+        const avatarSize = 34;
         const avatarY = rowY + (rowHeight - avatarSize) / 2;
         drawRoundedRect(
           ctx,
@@ -812,14 +729,14 @@ export function renderLeaderboardToCanvas(
           avatarY,
           avatarSize,
           avatarSize,
-          8,
-          'rgba(15, 23, 42, 0.9)',
-          isTop1 ? '#f59e0b' : 'rgba(51, 65, 85, 0.6)',
+          7,
+          '#0d111a',
+          isTop1 ? '#d97706' : '#273042',
           1
         );
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = '18px sans-serif';
+        ctx.font = '17px sans-serif';
         ctx.fillText(logo, teamX + avatarSize / 2, avatarY + avatarSize / 2 + 1);
 
         // Name + Tag
@@ -829,10 +746,10 @@ export function renderLeaderboardToCanvas(
 
         ctx.fillStyle = isTop1 ? '#ffffff' : '#f1f5f9';
         ctx.font = isTop1
-          ? '900 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+          ? '900 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
           : 'bold 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
-        const nameY = options.showCaptain && captain ? rowY + 26 : rowY + rowHeight / 2 + 5;
+        const nameY = options.showCaptain && captain ? rowY + 25 : rowY + rowHeight / 2 + 5;
         const maxTextW = teamCol.width - avatarSize - 80;
         const dispName = truncateText(ctx, teamName, maxTextW);
         ctx.fillText(dispName, nameX, nameY);
@@ -843,7 +760,7 @@ export function renderLeaderboardToCanvas(
           const tagX = nameX + nameWidth + 8;
           ctx.font = 'bold 10px monospace';
           const tagW = ctx.measureText(tag).width + 10;
-          drawRoundedRect(ctx, tagX, nameY - 12, tagW, 16, 4, 'rgba(30, 41, 59, 0.8)', 'rgba(71, 85, 105, 0.6)');
+          drawRoundedRect(ctx, tagX, nameY - 12, tagW, 16, 3, '#1a2233', '#2d3748', 1);
           ctx.fillStyle = '#cbd5e1';
           ctx.fillText(tag, tagX + 5, nameY);
         }
@@ -852,7 +769,7 @@ export function renderLeaderboardToCanvas(
         if (options.showCaptain && captain) {
           ctx.fillStyle = '#64748b';
           ctx.font = '600 11px monospace';
-          ctx.fillText(`👑 Capt: ${captain.ign}`, nameX, rowY + 44);
+          ctx.fillText(`👑 Capt: ${captain.ign}`, nameX, rowY + 43);
         }
       }
 
@@ -886,13 +803,13 @@ export function renderLeaderboardToCanvas(
           ctx.textBaseline = 'middle';
 
           if (hasScore) {
-            ctx.font = res.chickenDinner ? '900 15px monospace' : 'bold 14px monospace';
+            ctx.font = res.chickenDinner ? '900 14px monospace' : 'bold 14px monospace';
             ctx.fillStyle = res.chickenDinner ? '#fbbf24' : '#e2e8f0';
 
             const scoreText = res.chickenDinner ? `${score} 👑` : `${score}`;
             ctx.fillText(scoreText, gCol.headerX, rowY + rowHeight / 2);
           } else {
-            ctx.font = '600 13px monospace';
+            ctx.font = '600 12px monospace';
             ctx.fillStyle = '#475569';
             ctx.fillText('0', gCol.headerX, rowY + rowHeight / 2);
           }
@@ -905,7 +822,7 @@ export function renderLeaderboardToCanvas(
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = '#cbd5e1';
-        ctx.font = 'bold 14px monospace';
+        ctx.font = 'bold 13px monospace';
         ctx.fillText(`${totalKills}`, killsCol.headerX, rowY + rowHeight / 2);
       }
 
@@ -915,7 +832,7 @@ export function renderLeaderboardToCanvas(
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = totalWins > 0 ? '#fbbf24' : '#475569';
-        ctx.font = 'bold 14px monospace';
+        ctx.font = 'bold 13px monospace';
         ctx.fillText(totalWins > 0 ? `${totalWins} 👑` : '0', winsCol.headerX, rowY + rowHeight / 2);
       }
 
@@ -927,24 +844,24 @@ export function renderLeaderboardToCanvas(
           ctx.textBaseline = 'middle';
 
           if (prize && prize !== '—') {
-            const pw = ctx.measureText(prize).width + 18;
+            const pw = ctx.measureText(prize).width + 16;
             drawRoundedRect(
               ctx,
               prizeCol.headerX,
-              rowY + (rowHeight - 24) / 2,
+              rowY + (rowHeight - 22) / 2,
               pw,
-              24,
-              6,
-              'rgba(16, 185, 129, 0.12)',
-              'rgba(16, 185, 129, 0.3)',
+              22,
+              5,
+              '#06291e',
+              '#059669',
               1
             );
             ctx.fillStyle = '#34d399';
-            ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillText(prize, prizeCol.headerX + 9, rowY + rowHeight / 2);
+            ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText(prize, prizeCol.headerX + 8, rowY + rowHeight / 2);
           } else {
             ctx.fillStyle = '#475569';
-            ctx.font = '13px monospace';
+            ctx.font = '12px monospace';
             ctx.fillText('—', prizeCol.headerX, rowY + rowHeight / 2);
           }
         }
@@ -962,12 +879,12 @@ export function renderLeaderboardToCanvas(
         else if (isTop3) ptsColor = '#f59e0b';
 
         ctx.fillStyle = ptsColor;
-        ctx.font = isTop1 ? '900 20px monospace' : 'bold 18px monospace';
+        ctx.font = isTop1 ? '900 19px monospace' : 'bold 17px monospace';
         ctx.fillText(`${totalPoints}`, pointsCol.headerX, rowY + rowHeight / 2);
 
         // PTS label
         ctx.font = 'bold 10px monospace';
-        ctx.fillStyle = isTop1 ? 'rgba(251, 191, 36, 0.7)' : '#64748b';
+        ctx.fillStyle = isTop1 ? '#d97706' : '#64748b';
         ctx.fillText(' PTS', pointsCol.headerX + 24, rowY + rowHeight / 2);
       }
 
@@ -975,16 +892,16 @@ export function renderLeaderboardToCanvas(
     });
   }
 
-  // 8. FOOTER SECTION
-  const footerY = totalHeight - footerHeight - 15;
+  // 8. FOOTER SECTION (Solid dark panel)
+  const footerY = totalHeight - footerHeight - 12;
   drawRoundedRect(
     ctx,
     paddingX,
     footerY,
     contentWidth,
     footerHeight,
-    12,
-    '#0c0f17',
+    10,
+    '#0e121e',
     '#1e2538',
     1
   );
@@ -995,12 +912,12 @@ export function renderLeaderboardToCanvas(
   // Left: Verification & Branding
   ctx.textAlign = 'left';
   ctx.fillStyle = '#cbd5e1';
-  ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('⚔️ RULES OF SURVIVAL • ROS COMMUNITY', paddingX + 24, footerMidY - 8);
+  ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('⚔️ RULES OF SURVIVAL • ROS COMMUNITY', paddingX + 20, footerMidY - 7);
 
   ctx.fillStyle = '#64748b';
   ctx.font = '11px monospace';
-  ctx.fillText('ROS COMMUNITY TOURNAMENT RECORDS • MATCH RESULTS CONFIRMED', paddingX + 24, footerMidY + 10);
+  ctx.fillText('ROS COMMUNITY TOURNAMENT RECORDS • MATCH RESULTS CONFIRMED', paddingX + 20, footerMidY + 9);
 
   // Center: Scoring rule summary
   ctx.textAlign = 'center';
@@ -1014,11 +931,11 @@ export function renderLeaderboardToCanvas(
 
   // Right: Generation timestamp & Portal branding
   ctx.textAlign = 'right';
-  ctx.fillStyle = '#e2e8f0';
+  ctx.fillStyle = '#cbd5e1';
   ctx.font = 'bold 12px monospace';
-  ctx.fillText('RULES OF SURVIVAL COMMUNITY', width - paddingX - 24, footerMidY - 8);
+  ctx.fillText('RULES OF SURVIVAL COMMUNITY', width - paddingX - 20, footerMidY - 7);
 
   ctx.fillStyle = '#64748b';
   ctx.font = '10px monospace';
-  ctx.fillText(`Exported: ${new Date().toLocaleString()}`, width - paddingX - 24, footerMidY + 10);
+  ctx.fillText(`Exported: ${new Date().toLocaleString()}`, width - paddingX - 20, footerMidY + 9);
 }
