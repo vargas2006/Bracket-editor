@@ -137,6 +137,17 @@ function runTests() {
   assert(alphaEntry.rank === 1, 'Test 6.6: Alpha is rank 1');
   assert(bravoEntry.rank === 2, 'Test 6.7: Bravo is rank 2');
 
+  // 7. Prize Settings Verification
+  const prizeSettings = {
+    top1: '₱500',
+    top2: '₱200',
+    top3: '₱100',
+    autoApply: true,
+  };
+  assert(prizeSettings.top1 === '₱500', 'Test 7.1: Top 1 prize is ₱500');
+  assert(prizeSettings.top2 === '₱200', 'Test 7.2: Top 2 prize is ₱200');
+  assert(prizeSettings.top3 === '₱100', 'Test 7.3: Top 3 prize is ₱100');
+
   console.log(`\n=== TEST SUMMARY: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);

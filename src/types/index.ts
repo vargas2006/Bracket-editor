@@ -65,6 +65,14 @@ export interface TournamentScoringSettings {
   placementPoints: Record<number, number>; // { 1: 0, 2: 20, 3: 15, 4: 10, ... }
 }
 
+export interface TournamentPrizeSettings {
+  top1: string; // e.g. "₱500"
+  top2: string; // e.g. "₱200"
+  top3: string; // e.g. "₱100"
+  top4?: string; // e.g. "₱50" or "—"
+  autoApply: boolean; // default: true
+}
+
 export interface TournamentSettings {
   competitionName: string;
   seasonOrStage: string;
@@ -72,6 +80,7 @@ export interface TournamentSettings {
   pointsForChickenDinner: number;
   adminPin: string;
   scoring: TournamentScoringSettings;
+  prizes?: TournamentPrizeSettings;
 }
 
 export interface GameResult {

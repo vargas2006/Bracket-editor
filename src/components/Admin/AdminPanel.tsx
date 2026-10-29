@@ -4,6 +4,7 @@ import { exportToCSV } from '../../utils/leaderboardUtils';
 import { ConfirmModal } from '../Common/ConfirmModal';
 import { LeaderboardImageExport } from '../Leaderboard/LeaderboardImageExport';
 import { ScoringSettingsPanel } from './ScoringSettingsPanel';
+import { PrizeSettingsPanel } from './PrizeSettingsPanel';
 import { GameResultEntryPanel } from './GameResultEntryPanel';
 import {
   ShieldCheck,
@@ -167,7 +168,10 @@ export const AdminPanel: React.FC = () => {
       {/* 1. TOURNAMENT SCORING SETTINGS */}
       <ScoringSettingsPanel />
 
-      {/* 2. GAME RESULT ENTRY CONSOLE */}
+      {/* 2. TOURNAMENT PRIZE POOL & PLACEMENT PRIZES */}
+      <PrizeSettingsPanel />
+
+      {/* 3. GAME RESULT ENTRY CONSOLE */}
       <GameResultEntryPanel />
 
       {/* 3. GENERAL TOURNAMENT & SECURITY CONFIGURATION */}

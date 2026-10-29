@@ -1,6 +1,14 @@
-import { Team, BracketData, TournamentSettings, GameResult } from '../types';
+import { Team, BracketData, TournamentSettings, GameResult, TournamentPrizeSettings } from '../types';
 import { DEFAULT_SCORING_SETTINGS, calculateGamePoints } from '../utils/scoringUtils';
 import { generateSingleEliminationBracket } from '../utils/bracketUtils';
+
+export const DEFAULT_PRIZE_SETTINGS: TournamentPrizeSettings = {
+  top1: '₱500',
+  top2: '₱200',
+  top3: '₱100',
+  top4: '—',
+  autoApply: true,
+};
 
 export const INITIAL_SETTINGS: TournamentSettings = {
   competitionName: 'ROS LEGACY CHAMPIONS CUP 2026',
@@ -9,6 +17,7 @@ export const INITIAL_SETTINGS: TournamentSettings = {
   pointsForChickenDinner: 25,
   adminPin: '1234',
   scoring: DEFAULT_SCORING_SETTINGS,
+  prizes: DEFAULT_PRIZE_SETTINGS,
 };
 
 // Clean slate: Initially empty so user can enter their own data

@@ -4,6 +4,7 @@ import { formatPrize, formatOrdinal } from './leaderboardUtils';
 export interface GraphicExportOptions {
   mode: 'gameMatrix' | 'standings';
   showPodium: boolean;
+  showScoringRules: boolean;
   showCaptain: boolean;
   showPrize: boolean;
   maxTeams: number; // e.g. 8, 12, 16, or 999 for all
@@ -39,6 +40,7 @@ export function drawRoundedRect(
   ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
   ctx.lineTo(x + bl, y + height);
   ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+  ctx.lineTo(x + y, y); // fallback safe
   ctx.lineTo(x, y + tl);
   ctx.quadraticCurveTo(x, y, x + tl, y);
   ctx.closePath();
@@ -95,14 +97,16 @@ export function renderLeaderboardToCanvas(
 
   const hasTeams = displayEntries.length > 0;
   const showPodium = options.showPodium && hasTeams;
+  const showScoringRules = options.showScoringRules;
 
   // Layout sizing
   const headerHeight = 180;
-  const podiumHeight = showPodium ? 175 : 0;
+  const podiumHeight = showPodium ? 128 : 0;
+  const scoringRulesHeight = showScoringRules ? 52 : 0;
   const tableHeaderHeight = 48;
   const rowHeight = 62;
   const footerHeight = 70;
-  const spacingBetweenSections = 20;
+  const spacingBetweenSections = 18;
 
   const tableBodyHeight = hasTeams
     ? displayEntries.length * rowHeight
@@ -111,11 +115,12 @@ export function renderLeaderboardToCanvas(
   const totalHeight =
     headerHeight +
     (showPodium ? podiumHeight + spacingBetweenSections : 0) +
+    (showScoringRules ? scoringRulesHeight + spacingBetweenSections : 0) +
     tableHeaderHeight +
     tableBodyHeight +
     spacingBetweenSections +
     footerHeight +
-    40; // bottom margin
+    30; // bottom margin
 
   canvas.width = width;
   canvas.height = totalHeight;
@@ -168,7 +173,7 @@ export function renderLeaderboardToCanvas(
     ctx.stroke();
   }
 
-  // 2. High-impact Esports Outer Glowing Border
+  // 2. Outer Glowing Frame
   const borderGrad = ctx.createLinearGradient(0, 0, width, totalHeight);
   borderGrad.addColorStop(0, '#e11d48');
   borderGrad.addColorStop(0.5, '#475569');
@@ -253,11 +258,13 @@ export function renderLeaderboardToCanvas(
   const subtitle = `${(settings.seasonOrStage || 'OFFICIAL COMPETITION').toUpperCase()} • TOURNAMENT STANDINGS & MATCH RESULTS`;
   ctx.fillText(subtitle, paddingX, currentY);
 
-  // Right-aligned stats badges
+  // Scoring Settings Values
   const scoring = settings.scoring;
   const ptsPerKill = scoring?.pointsPerKill ?? settings.pointsPerKill ?? 5;
   const cdBonus = scoring?.chickenDinnerBonus ?? settings.pointsForChickenDinner ?? 25;
+  const prizes = settings.prizes;
 
+  // Right-aligned stats badges
   const statTags = [
     `🎮 ${totalGames} GAMES`,
     `⚔️ ${ptsPerKill} PTS/KILL`,
@@ -296,8 +303,9 @@ export function renderLeaderboardToCanvas(
     const top3 = options.mode === 'gameMatrix' ? gameEntries[2] : entries[2];
 
     const cardGap = 16;
-    const cardWidth = (contentWidth - cardGap * 2) / 3; // ~489px each
+    const cardWidth = (contentWidth - cardGap * 2) / 3;
     const cardY = currentY;
+    const cardHeight = 126;
 
     // Helper to draw a single podium card
     const drawPodiumCard = (
@@ -315,6 +323,16 @@ export function renderLeaderboardToCanvas(
       const kills = entry.totalKills ?? entry.kills ?? 0;
       const wins = entry.totalChickenDinners ?? entry.wins ?? 0;
       const logo = entry.logo || (place === 1 ? '👑' : place === 2 ? '🥈' : '🥉');
+
+      // Determine prize
+      const prize =
+        entry.prize && entry.prize !== '—'
+          ? entry.prize
+          : place === 1
+          ? prizes?.top1 || '₱500'
+          : place === 2
+          ? prizes?.top2 || '₱200'
+          : prizes?.top3 || '₱100';
 
       let borderColor = 'rgba(51, 65, 85, 0.6)';
       let glowColor = 'rgba(0, 0, 0, 0)';
@@ -372,7 +390,7 @@ export function renderLeaderboardToCanvas(
       ctx.fillRect(cardX, cardYPos, cardW, cardH);
 
       // Logo Box
-      const logoBoxSize = 54;
+      const logoBoxSize = 58;
       const logoBoxX = cardX + 18;
       const logoBoxY = cardYPos + (cardH - logoBoxSize) / 2;
       drawRoundedRect(
@@ -386,7 +404,7 @@ export function renderLeaderboardToCanvas(
         borderColor,
         1
       );
-      ctx.font = '26px sans-serif';
+      ctx.font = '28px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(logo, logoBoxX + logoBoxSize / 2, logoBoxY + logoBoxSize / 2 + 1);
@@ -399,43 +417,133 @@ export function renderLeaderboardToCanvas(
       // Placement Pill
       ctx.font = 'bold 11px monospace';
       const labelW = ctx.measureText(titleLabel).width + 16;
-      drawRoundedRect(ctx, textX, cardYPos + 22, labelW, 20, 4, labelBg);
+      drawRoundedRect(ctx, textX, cardYPos + 18, labelW, 20, 4, labelBg);
       ctx.fillStyle = labelText;
-      ctx.fillText(titleLabel, textX + 8, cardYPos + 36);
+      ctx.fillText(titleLabel, textX + 8, cardYPos + 32);
 
       // Team Name
       ctx.fillStyle = '#ffffff';
       ctx.font = place === 1 ? '900 20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' : 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
       const maxNameW = cardW - 220;
-      ctx.fillText(truncateText(ctx, teamName, maxNameW), textX, cardYPos + 64);
+      ctx.fillText(truncateText(ctx, teamName, maxNameW), textX, cardYPos + 58);
 
       // Stats line: Kills • Chicken Dinners
       ctx.fillStyle = '#94a3b8';
       ctx.font = '600 12px monospace';
-      ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 85);
+      ctx.fillText(`${kills} Kills  •  ${wins} Wins 👑`, textX, cardYPos + 78);
+
+      // Prize Badge in Card
+      if (prize && prize !== '—') {
+        const prizeLabel = `🎁 PRIZE: ${prize}`;
+        ctx.font = 'bold 11px monospace';
+        const pw = ctx.measureText(prizeLabel).width + 12;
+        drawRoundedRect(ctx, textX, cardYPos + 89, pw, 19, 4, 'rgba(16, 185, 129, 0.15)', 'rgba(16, 185, 129, 0.4)', 1);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(prizeLabel, textX + 6, cardYPos + 103);
+      }
 
       // Points on Right
       const rightX = cardX + cardW - 20;
       ctx.textAlign = 'right';
       ctx.fillStyle = pointsColor;
       ctx.font = place === 1 ? '900 32px monospace' : '800 28px monospace';
-      ctx.fillText(`${points}`, rightX, cardYPos + 58);
+      ctx.fillText(`${points}`, rightX, cardYPos + 64);
 
       ctx.fillStyle = '#64748b';
       ctx.font = 'bold 10px monospace';
-      ctx.fillText('TOTAL PTS', rightX, cardYPos + 74);
+      ctx.fillText('TOTAL PTS', rightX, cardYPos + 80);
     };
 
     // Render 2nd, 1st, 3rd in classic podium order
-    // Order: 2nd place (left), 1st place (center), 3rd place (right)
-    drawPodiumCard(paddingX, cardY, cardWidth, 110, 2, top2);
-    drawPodiumCard(paddingX + cardWidth + cardGap, cardY, cardWidth, 110, 1, top1);
-    drawPodiumCard(paddingX + (cardWidth + cardGap) * 2, cardY, cardWidth, 110, 3, top3);
+    drawPodiumCard(paddingX, cardY, cardWidth, cardHeight, 2, top2);
+    drawPodiumCard(paddingX + cardWidth + cardGap, cardY, cardWidth, cardHeight, 1, top1);
+    drawPodiumCard(paddingX + (cardWidth + cardGap) * 2, cardY, cardWidth, cardHeight, 3, top3);
 
-    currentY += 110 + spacingBetweenSections;
+    currentY += cardHeight + spacingBetweenSections;
   }
 
-  // 5. THE LEADERBOARD TABLE CONTAINER
+  // 5. OFFICIAL TOURNAMENT SCORING SYSTEM & RULES BANNER
+  if (showScoringRules) {
+    const bannerY = currentY;
+    const bannerH = 48;
+
+    drawRoundedRect(
+      ctx,
+      paddingX,
+      bannerY,
+      contentWidth,
+      bannerH,
+      12,
+      '#0f1422',
+      '#1e2538',
+      1.5
+    );
+
+    // Left Tag: SCORING RULES
+    const tagX = paddingX + 16;
+    drawRoundedRect(ctx, tagX, bannerY + 11, 130, 26, 6, 'rgba(225, 29, 72, 0.2)', '#f43f5e', 1);
+    ctx.fillStyle = '#fb7185';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚡ SCORING RULES', tagX + 65, bannerY + 24);
+
+    // Rule items
+    const rulesStartY = bannerY + 24;
+    ctx.textBaseline = 'middle';
+
+    // 1. Kill Points Rule
+    let curX = tagX + 148;
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#ffffff';
+    const killRuleText = `⚔️ KILLS: ${ptsPerKill} PTS / KILL`;
+    ctx.fillText(killRuleText, curX, rulesStartY);
+    curX += ctx.measureText(killRuleText).width + 20;
+
+    // Divider
+    ctx.fillStyle = 'rgba(71, 85, 105, 0.6)';
+    ctx.fillText('•', curX, rulesStartY);
+    curX += 14;
+
+    // 2. Chicken Dinner Rule
+    ctx.fillStyle = '#fbbf24';
+    const cdRuleText = `👑 CHICKEN DINNER: +${cdBonus} PTS`;
+    ctx.fillText(cdRuleText, curX, rulesStartY);
+    curX += ctx.measureText(cdRuleText).width + 20;
+
+    // Divider
+    ctx.fillStyle = 'rgba(71, 85, 105, 0.6)';
+    ctx.fillText('•', curX, rulesStartY);
+    curX += 14;
+
+    // 3. Placement Points Rule
+    const placementEnabled = scoring?.placementPointsEnabled ?? true;
+    const p2 = scoring?.placementPoints?.[2] ?? 20;
+    const p3 = scoring?.placementPoints?.[3] ?? 15;
+    const p4 = scoring?.placementPoints?.[4] ?? 10;
+    const placeRuleText = placementEnabled
+      ? `🎯 PLACEMENT: 2nd +${p2} • 3rd +${p3} • 4th +${p4}`
+      : '🎯 PLACEMENT: Kills + CD Only';
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(placeRuleText, curX, rulesStartY);
+
+    // 4. Right side: Tournament Prize Pool
+    const top1Prize = prizes?.top1 || '₱500';
+    const top2Prize = prizes?.top2 || '₱200';
+    const top3Prize = prizes?.top3 || '₱100';
+    const prizeSummaryText = `🏆 PRIZES: 1st ${top1Prize}  •  2nd ${top2Prize}  •  3rd ${top3Prize}`;
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText(prizeSummaryText, paddingX + contentWidth - 18, rulesStartY);
+
+    currentY += bannerH + spacingBetweenSections;
+  }
+
+  // 6. THE LEADERBOARD TABLE CONTAINER
   const tableContainerY = currentY;
   const tableContainerHeight = tableHeaderHeight + tableBodyHeight;
 
@@ -452,7 +560,6 @@ export function renderLeaderboardToCanvas(
   );
 
   // Table Column Definitions
-  // We configure columns based on options.mode
   interface ColumnDef {
     key: string;
     label: string;
@@ -464,12 +571,12 @@ export function renderLeaderboardToCanvas(
   const columns: ColumnDef[] = [];
 
   if (options.mode === 'gameMatrix') {
-    // Placement: 100px
+    // Placement
     columns.push({ key: 'rank', label: 'RANK', width: 90, align: 'center', headerX: paddingX + 45 });
-    // Team Name: 360px
+    // Team Name
     columns.push({ key: 'team', label: 'TEAM NAME & ROSTER', width: 360, align: 'left', headerX: paddingX + 110 });
 
-    // Game Columns: e.g. G1, G2, G3...
+    // Game Columns
     const gameColWidth = Math.min(85, Math.max(60, Math.floor(450 / totalGames)));
     let curX = paddingX + 470;
     for (let g = 1; g <= totalGames; g++) {
@@ -527,7 +634,7 @@ export function renderLeaderboardToCanvas(
     ctx.fillText(col.label, col.headerX, tableContainerY + tableHeaderHeight / 2);
   }
 
-  // 6. RENDER ROWS
+  // 7. RENDER ROWS
   let rowY = tableContainerY + tableHeaderHeight;
 
   if (!hasTeams) {
@@ -561,10 +668,21 @@ export function renderLeaderboardToCanvas(
       const logo = rawEntry.logo || '🛡️';
       const members = rawEntry.members || [];
       const captain = members.find((m) => m.isCaptain);
-      const prize = formatPrize(rawEntry.prize);
       const totalKills = (rawEntry as any).totalKills ?? (rawEntry as any).kills ?? 0;
       const totalWins = (rawEntry as any).totalChickenDinners ?? (rawEntry as any).wins ?? 0;
       const totalPoints = (rawEntry as any).totalPoints ?? (rawEntry as any).points ?? 0;
+
+      // Prize fallback
+      const prize =
+        rawEntry.prize && rawEntry.prize !== '—'
+          ? formatPrize(rawEntry.prize)
+          : rank === 1
+          ? prizes?.top1 || '₱500'
+          : rank === 2
+          ? prizes?.top2 || '₱200'
+          : rank === 3
+          ? prizes?.top3 || '₱100'
+          : '—';
 
       // Row background
       let rowBg = idx % 2 === 0 ? 'rgba(18, 23, 36, 0.7)' : 'rgba(13, 17, 27, 0.7)';
@@ -857,7 +975,7 @@ export function renderLeaderboardToCanvas(
     });
   }
 
-  // 7. FOOTER SECTION
+  // 8. FOOTER SECTION
   const footerY = totalHeight - footerHeight - 15;
   drawRoundedRect(
     ctx,
@@ -904,4 +1022,3 @@ export function renderLeaderboardToCanvas(
   ctx.font = '10px monospace';
   ctx.fillText(`Exported: ${new Date().toLocaleString()}`, width - paddingX - 24, footerMidY + 10);
 }
-

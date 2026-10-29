@@ -5,6 +5,7 @@ import type {
   BracketData,
   TournamentSettings,
   TournamentScoringSettings,
+  TournamentPrizeSettings,
   RosterDisplayMode,
   GameResult,
   GameLeaderboardEntry,
@@ -13,6 +14,7 @@ import {
   INITIAL_TEAMS,
   INITIAL_SETTINGS,
   INITIAL_GAME_RESULTS,
+  DEFAULT_PRIZE_SETTINGS,
   SAMPLE_TEAMS,
   SAMPLE_GAME_RESULTS,
   generateInitialBracket,
@@ -63,6 +65,8 @@ interface TournamentContextType {
   regenerateBracket: (size: 4 | 8 | 16, selectedTeamIds: string[], hasThirdPlace: boolean) => void;
   updateSettings: (updates: Partial<TournamentSettings>) => void;
   updateScoringSettings: (updates: Partial<TournamentScoringSettings>) => void;
+  updatePrizeSettings: (updates: Partial<TournamentPrizeSettings>) => void;
+  applyPlacementPrizes: (customPrizes?: Partial<TournamentPrizeSettings>) => void;
   saveGameResult: (
     teamId: string,
     gameNumber: number,
@@ -104,6 +108,9 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         const parsed = JSON.parse(saved);
         if (!parsed.scoring) {
           parsed.scoring = DEFAULT_SCORING_SETTINGS;
+        }
+        if (!parsed.prizes) {
+          parsed.prizes = DEFAULT_PRIZE_SETTINGS;
         }
         return parsed;
       }
@@ -482,6 +489,71 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     showToast('Scoring settings updated! Standings recalculated.');
   };
 
+  const applyPlacementPrizes = (customPrizes?: Partial<TournamentPrizeSettings>) => {
+    const activePrizes: TournamentPrizeSettings = {
+      top1: '₱500',
+      top2: '₱200',
+      top3: '₱100',
+      top4: '—',
+      autoApply: true,
+      ...(settings.prizes || {}),
+      ...(customPrizes || {}),
+    };
+
+    setTeams((prevTeams) => {
+      const sorted = [...prevTeams].sort((a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        const kd = (b.kills ?? 0) - (a.kills ?? 0);
+        if (kd !== 0) return kd;
+        return (b.wins ?? 0) - (a.wins ?? 0);
+      });
+
+      const top1Id = sorted[0]?.id;
+      const top2Id = sorted[1]?.id;
+      const top3Id = sorted[2]?.id;
+      const top4Id = sorted[3]?.id;
+
+      return prevTeams.map((team) => {
+        if (team.id === top1Id && activePrizes.top1) {
+          return { ...team, prize: activePrizes.top1 };
+        } else if (team.id === top2Id && activePrizes.top2) {
+          return { ...team, prize: activePrizes.top2 };
+        } else if (team.id === top3Id && activePrizes.top3) {
+          return { ...team, prize: activePrizes.top3 };
+        } else if (team.id === top4Id && activePrizes.top4 && activePrizes.top4 !== '—') {
+          return { ...team, prize: activePrizes.top4 };
+        }
+        return team;
+      });
+    });
+
+    showToast('Placement prizes assigned to Top 1, Top 2, and Top 3 teams!');
+  };
+
+  const updatePrizeSettings = (updates: Partial<TournamentPrizeSettings>) => {
+    if (!isAdmin) {
+      showToast('Action restricted: Administrator authorization required.');
+      return;
+    }
+
+    const currentPrizes = settings.prizes || DEFAULT_PRIZE_SETTINGS;
+    const mergedPrizes: TournamentPrizeSettings = {
+      ...currentPrizes,
+      ...updates,
+    };
+
+    setSettings((prev) => ({
+      ...prev,
+      prizes: mergedPrizes,
+    }));
+
+    if (mergedPrizes.autoApply) {
+      applyPlacementPrizes(mergedPrizes);
+    }
+
+    showToast('Prize pool settings saved!');
+  };
+
   const saveGameResult = (
     teamId: string,
     gameNumber: number,
@@ -590,6 +662,8 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         regenerateBracket,
         updateSettings,
         updateScoringSettings,
+        updatePrizeSettings,
+        applyPlacementPrizes,
         saveGameResult,
         deleteGameResult,
         showToast,

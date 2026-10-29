@@ -175,10 +175,19 @@ export const LeaderboardTable: React.FC = () => {
                   )}
                 </div>
                 <h4 className="text-sm font-bold text-white truncate">{top2.teamName}</h4>
-                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
+                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span>{top2.totalKills} Kills</span>
                   <span>•</span>
                   <span>{top2.totalChickenDinners} Wins 👑</span>
+                  {top2.prize && top2.prize !== '—' && (
+                    <>
+                      <span>•</span>
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <Gift className="w-3 h-3" />
+                        {formatPrize(top2.prize)}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -214,10 +223,19 @@ export const LeaderboardTable: React.FC = () => {
                 <h3 className="text-base font-extrabold text-white truncate">
                   {top1.teamName}
                 </h3>
-                <div className="text-xs text-amber-300 font-semibold flex items-center gap-2 mt-0.5">
+                <div className="text-xs text-amber-300 font-semibold flex items-center gap-2 mt-0.5 flex-wrap">
                   <span className="font-mono">{top1.totalKills} Kills</span>
                   <span>•</span>
                   <span>{top1.totalChickenDinners} Chicken Dinners 👑</span>
+                  {top1.prize && top1.prize !== '—' && (
+                    <>
+                      <span>•</span>
+                      <span className="text-emerald-300 font-bold flex items-center gap-1 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
+                        <Gift className="w-3 h-3 text-emerald-400" />
+                        {formatPrize(top1.prize)}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -252,10 +270,19 @@ export const LeaderboardTable: React.FC = () => {
                   )}
                 </div>
                 <h4 className="text-sm font-bold text-white truncate">{top3.teamName}</h4>
-                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
+                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
                   <span>{top3.totalKills} Kills</span>
                   <span>•</span>
                   <span>{top3.totalChickenDinners} Wins 👑</span>
+                  {top3.prize && top3.prize !== '—' && (
+                    <>
+                      <span>•</span>
+                      <span className="text-emerald-400 font-bold flex items-center gap-1">
+                        <Gift className="w-3 h-3" />
+                        {formatPrize(top3.prize)}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

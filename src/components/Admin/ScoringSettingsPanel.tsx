@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   RotateCcw,
-  Sparkles,
   Layers,
 } from 'lucide-react';
 
@@ -266,7 +265,7 @@ export const ScoringSettingsPanel: React.FC = () => {
         {/* Live Calculation Example Preview */}
         <div className="p-3.5 bg-gradient-to-r from-rose-950/20 via-slate-900/40 to-slate-900/40 border border-rose-500/30 rounded-xl flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-rose-400 flex-shrink-0" />
+            <Gamepad2 className="w-4 h-4 text-rose-400 flex-shrink-0" />
             <div className="text-xs">
               <span className="text-slate-300 font-semibold">Current Scoring Formula Preview:</span>{' '}
               <span className="text-slate-400">

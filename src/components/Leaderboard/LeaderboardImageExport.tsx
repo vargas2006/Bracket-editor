@@ -13,9 +13,10 @@ import {
   Trophy,
   LayoutGrid,
   ListOrdered,
-  Sparkles,
+  Image as ImageIcon,
   SlidersHorizontal,
   RefreshCw,
+  Zap,
 } from 'lucide-react';
 
 interface LeaderboardImageExportProps {
@@ -46,6 +47,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
   const [options, setOptions] = useState<GraphicExportOptions>({
     mode: 'gameMatrix',
     showPodium: true,
+    showScoringRules: true,
     showCaptain: true,
     showPrize: true,
     maxTeams: 16,
@@ -134,7 +136,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
         <div className="flex items-center justify-between p-4 sm:px-6 bg-[#131726] border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-rose-800 border border-rose-500/50 flex items-center justify-center text-white shadow-lg shadow-rose-950/40">
-              <Sparkles className="w-5 h-5 text-rose-200" />
+              <ImageIcon className="w-5 h-5 text-rose-200" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -201,6 +203,20 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
               />
               <Trophy className="w-3.5 h-3.5 text-amber-400" />
               <span className="font-semibold text-[11px]">Top 3 Podium</span>
+            </label>
+
+            {/* Scoring System Rules Toggle */}
+            <label className="flex items-center gap-1.5 cursor-pointer bg-[#121624] px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 text-slate-300">
+              <input
+                type="checkbox"
+                checked={options.showScoringRules}
+                onChange={(e) =>
+                  setOptions((prev) => ({ ...prev, showScoringRules: e.target.checked }))
+                }
+                className="w-3.5 h-3.5 accent-rose-600 rounded cursor-pointer"
+              />
+              <Zap className="w-3.5 h-3.5 text-rose-400" />
+              <span className="font-semibold text-[11px]">Points Rules Banner</span>
             </label>
 
             {/* Captain IGN Toggle */}
