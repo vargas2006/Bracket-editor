@@ -102,6 +102,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
     document.body.removeChild(a);
 
     setIsGenerating(false);
+    tournament.showToast('High-resolution tournament image downloaded!', 'success', 'Image Exported');
   };
 
   const handleCopyToClipboard = async () => {
@@ -116,6 +117,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
             new ClipboardItem({ 'image/png': blob }),
           ]);
           setCopied(true);
+          tournament.showToast('Tournament image copied to clipboard!', 'success', 'Image Copied');
           setTimeout(() => setCopied(false), 2500);
         } else {
           // Fallback download if clipboard item is not supported

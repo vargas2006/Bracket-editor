@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { BracketMatch, Team } from '../../types';
-import { X, Crown, Swords, RotateCcw } from 'lucide-react';
+import { X, Crown, Swords, RotateCcw, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface MatchEditModalProps {
@@ -38,6 +38,8 @@ export const MatchEditModal: React.FC<MatchEditModalProps> = ({
   const [score2, setScore2] = useState<string>(match.score2 !== null ? String(match.score2) : '');
   const [winnerId, setWinnerId] = useState<string | null>(match.winnerId);
   const [status, setStatus] = useState<'upcoming' | 'live' | 'completed'>(match.status);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     setTeam1Id(match.team1Id || '');
@@ -66,7 +68,7 @@ export const MatchEditModal: React.FC<MatchEditModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAdmin) {
+    if (!isAdmin || isSaving || isSaved) {
       onClose();
       return;
     }
@@ -91,15 +93,24 @@ export const MatchEditModal: React.FC<MatchEditModalProps> = ({
       });
     }
 
-    onSave(match.id, {
-      score1: parsedScore1,
-      score2: parsedScore2,
-      winnerId: computedWinnerId,
-      status: finalStatus,
-      team1Id: team1Id || null,
-      team2Id: team2Id || null,
-    });
-    onClose();
+    setIsSaving(true);
+    setTimeout(() => {
+      setIsSaving(false);
+      setIsSaved(true);
+      onSave(match.id, {
+        score1: parsedScore1,
+        score2: parsedScore2,
+        winnerId: computedWinnerId,
+        status: finalStatus,
+        team1Id: team1Id || null,
+        team2Id: team2Id || null,
+      });
+
+      setTimeout(() => {
+        setIsSaved(false);
+        onClose();
+      }, 450);
+    }, 200);
   };
 
   return (
@@ -328,9 +339,26 @@ export const MatchEditModal: React.FC<MatchEditModalProps> = ({
               {isAdmin && (
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white rounded-lg shadow-lg shadow-rose-900/40"
+                  disabled={isSaving || isSaved}
+                  className={`px-5 py-2 text-xs font-bold rounded-lg shadow-lg transition-all active:scale-95 flex items-center gap-1.5 ${
+                    isSaved
+                      ? 'bg-emerald-600 text-white shadow-emerald-950/50 ring-2 ring-emerald-400'
+                      : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/40'
+                  }`}
                 >
-                  Save & Advance Bracket
+                  {isSaving ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : isSaved ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
+                      <span>✓ Match Saved!</span>
+                    </>
+                  ) : (
+                    <span>Save & Advance Bracket</span>
+                  )}
                 </button>
               )}
             </div>

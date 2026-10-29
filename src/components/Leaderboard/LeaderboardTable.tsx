@@ -29,6 +29,7 @@ import {
   Crosshair,
   Flame,
   Info,
+  Check,
 } from 'lucide-react';
 
 export const LeaderboardTable: React.FC = () => {
@@ -46,6 +47,7 @@ export const LeaderboardTable: React.FC = () => {
     deleteTeam,
     resetLeaderboardPoints,
     addTeam,
+    showToast,
   } = useTournament();
 
   const scoring = settings.scoring;
@@ -58,6 +60,7 @@ export const LeaderboardTable: React.FC = () => {
   const [activeHoverTeamId, setActiveHoverTeamId] = useState<string | null>(null);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isExportImageOpen, setIsExportImageOpen] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [teamToDelete, setTeamToDelete] = useState<{ id: string; name: string } | null>(null);
 
@@ -87,7 +90,10 @@ export const LeaderboardTable: React.FC = () => {
   };
 
   const handleExportCSV = () => {
+    setIsExportingCSV(true);
     exportToCSV(leaderboard, settings.competitionName, gameLeaderboard, totalGames);
+    showToast('Tournament leaderboard CSV downloaded successfully!', 'success', 'Export Complete');
+    setTimeout(() => setIsExportingCSV(false), 2200);
   };
 
   const handleQuickAddTeam = () => {
@@ -372,10 +378,18 @@ export const LeaderboardTable: React.FC = () => {
           <button
             onClick={handleExportCSV}
             title="Download CSV tournament spreadsheet"
-            className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
+            className={`p-2 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-all active:scale-95 ${
+              isExportingCSV
+                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
+            }`}
           >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">CSV</span>
+            {isExportingCSV ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            <span className="hidden sm:inline">{isExportingCSV ? 'Downloaded' : 'CSV'}</span>
           </button>
 
           <button

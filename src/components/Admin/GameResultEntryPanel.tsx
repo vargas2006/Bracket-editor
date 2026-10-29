@@ -39,6 +39,11 @@ export const GameResultEntryPanel: React.FC = () => {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Button interaction states
+  const [isSavingAll, setIsSavingAll] = useState(false);
+  const [isBatchSaved, setIsBatchSaved] = useState(false);
+  const [savingRowId, setSavingRowId] = useState<string | null>(null);
+
   // Populate row states whenever activeGame or gameResults or teams change
   useEffect(() => {
     const newStates: Record<string, RowState> = {};
@@ -116,6 +121,8 @@ export const GameResultEntryPanel: React.FC = () => {
     if (!row) return;
 
     setErrorMessage(null);
+    setSavingRowId(teamId);
+
     const placementVal =
       row.placement !== '' && !isNaN(Number(row.placement))
         ? Number(row.placement)
@@ -129,62 +136,77 @@ export const GameResultEntryPanel: React.FC = () => {
       row.chickenDinner
     );
 
-    if (res.success) {
-      setRowStates((prev) => ({
-        ...prev,
-        [teamId]: {
-          ...prev[teamId],
-          isModified: false,
-          isSaved: true,
-        },
-      }));
-    } else if (res.error) {
-      setErrorMessage(res.error);
-    }
+    setTimeout(() => {
+      setSavingRowId(null);
+      if (res.success) {
+        setRowStates((prev) => ({
+          ...prev,
+          [teamId]: {
+            ...prev[teamId],
+            isModified: false,
+            isSaved: true,
+          },
+        }));
+      } else if (res.error) {
+        setErrorMessage(res.error);
+      }
+    }, 150);
   };
 
   // Save ALL teams for the active game
   const handleSaveAllTeams = () => {
     setErrorMessage(null);
-    let successCount = 0;
-    let failedError: string | null = null;
+    setIsSavingAll(true);
 
-    teams.forEach((team) => {
-      const row = rowStates[team.id];
-      if (!row) return;
+    setTimeout(() => {
+      let successCount = 0;
+      let failedError: string | null = null;
 
-      const placementVal =
-        row.placement !== '' && !isNaN(Number(row.placement))
-          ? Number(row.placement)
-          : undefined;
+      teams.forEach((team) => {
+        const row = rowStates[team.id];
+        if (!row) return;
 
-      const res = saveGameResult(
-        team.id,
-        activeGame,
-        Number(row.kills) || 0,
-        placementVal,
-        row.chickenDinner
-      );
+        const placementVal =
+          row.placement !== '' && !isNaN(Number(row.placement))
+            ? Number(row.placement)
+            : undefined;
 
-      if (res.success) {
-        successCount++;
-      } else if (res.error && !failedError) {
-        failedError = res.error;
-      }
-    });
+        const res = saveGameResult(
+          team.id,
+          activeGame,
+          Number(row.kills) || 0,
+          placementVal,
+          row.chickenDinner
+        );
 
-    if (failedError) {
-      setErrorMessage(failedError);
-    } else {
-      showToast(`All ${successCount} teams saved successfully for Game ${activeGame}!`);
-      setRowStates((prev) => {
-        const next: Record<string, RowState> = {};
-        Object.keys(prev).forEach((id) => {
-          next[id] = { ...prev[id], isModified: false, isSaved: true };
-        });
-        return next;
+        if (res.success) {
+          successCount++;
+        } else if (res.error && !failedError) {
+          failedError = res.error;
+        }
       });
-    }
+
+      setIsSavingAll(false);
+
+      if (failedError) {
+        setErrorMessage(failedError);
+      } else {
+        setIsBatchSaved(true);
+        setTimeout(() => setIsBatchSaved(false), 2600);
+        showToast(
+          `All ${successCount} teams saved successfully for Game ${activeGame}!`,
+          'success',
+          'Game Saved!'
+        );
+        setRowStates((prev) => {
+          const next: Record<string, RowState> = {};
+          Object.keys(prev).forEach((id) => {
+            next[id] = { ...prev[id], isModified: false, isSaved: true };
+          });
+          return next;
+        });
+      }
+    }, 250);
   };
 
   // Clear all results for this active game
@@ -524,23 +546,28 @@ export const GameResultEntryPanel: React.FC = () => {
                       <td className="py-3 px-3 text-center whitespace-nowrap">
                         <button
                           type="button"
+                          disabled={savingRowId === team.id}
                           onClick={() => handleSaveSingleRow(team.id)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 mx-auto ${
-                            row.isModified
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 mx-auto active:scale-95 ${
+                            savingRowId === team.id
+                              ? 'bg-slate-700 text-slate-300'
+                              : row.isModified
                               ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-950/40 animate-pulse'
                               : row.isSaved
-                              ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-900/40'
+                              ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-900/50 shadow-sm shadow-emerald-950/30'
                               : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
                           }`}
                         >
-                          {row.isModified ? (
+                          {savingRowId === team.id ? (
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          ) : row.isModified ? (
                             <>
                               <Save className="w-3 h-3" />
                               <span>Save</span>
                             </>
                           ) : row.isSaved ? (
                             <>
-                              <Check className="w-3 h-3 text-emerald-400" />
+                              <Check className="w-3 h-3 text-emerald-400 stroke-[3]" />
                               <span>Saved</span>
                             </>
                           ) : (
@@ -571,11 +598,30 @@ export const GameResultEntryPanel: React.FC = () => {
 
         <button
           type="button"
+          disabled={isSavingAll}
           onClick={handleSaveAllTeams}
-          className="w-full sm:w-auto px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-rose-900/40 transition-all"
+          className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 ${
+            isBatchSaved
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 ring-2 ring-emerald-400'
+              : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/40'
+          }`}
         >
-          <Save className="w-4 h-4" />
-          <span>Save All Teams for Game {activeGame}</span>
+          {isSavingAll ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Saving Records...</span>
+            </>
+          ) : isBatchSaved ? (
+            <>
+              <Check className="w-4 h-4 text-emerald-200 stroke-[3]" />
+              <span>✓ All Teams Saved Successfully!</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save All Teams for Game {activeGame}</span>
+            </>
+          )}
         </button>
       </div>
 

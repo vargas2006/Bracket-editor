@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 
 export const ScoringSettingsPanel: React.FC = () => {
-  const { settings, updateScoringSettings, isAdmin } = useTournament();
+  const { settings, updateScoringSettings, isAdmin, showToast } = useTournament();
   const currentScoring = settings.scoring;
 
   const [pointsPerKill, setPointsPerKill] = useState<number>(currentScoring?.pointsPerKill ?? 5);
@@ -29,6 +29,7 @@ export const ScoringSettingsPanel: React.FC = () => {
 
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Sync state if context changes
   useEffect(() => {
@@ -88,6 +89,13 @@ export const ScoringSettingsPanel: React.FC = () => {
       placementPoints,
     });
 
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2500);
+    showToast(
+      'Scoring rules saved & applied! All existing game scores have been recalculated.',
+      'success',
+      'Rules Saved!'
+    );
     setSuccessNotice('Scoring rules saved & applied! All existing game scores have been recalculated.');
     setTimeout(() => setSuccessNotice(null), 4000);
   };
@@ -284,10 +292,23 @@ export const ScoringSettingsPanel: React.FC = () => {
         <div className="flex justify-end pt-2">
           <button
             type="submit"
-            className="px-6 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all"
+            className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all active:scale-95 ${
+              isSaved
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 ring-2 ring-emerald-400'
+                : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/40'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            Save Scoring Settings & Recalculate
+            {isSaved ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>✓ Scoring Rules Saved!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Scoring Settings & Recalculate</span>
+              </>
+            )}
           </button>
         </div>
       </form>

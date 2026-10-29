@@ -19,6 +19,7 @@ import {
   Image as ImageIcon,
   Save,
   Trash2,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -46,6 +47,9 @@ export const AdminPanel: React.FC = () => {
   const [isClearAllConfirmOpen, setIsClearAllConfirmOpen] = useState(false);
   const [isImageExportOpen, setIsImageExportOpen] = useState(false);
 
+  const [isSettingsSaved, setIsSettingsSaved] = useState(false);
+  const [isJsonExported, setIsJsonExported] = useState(false);
+
   // Quick PIN login inside the panel if currently guest
   const [unlockPin, setUnlockPin] = useState('');
 
@@ -56,6 +60,9 @@ export const AdminPanel: React.FC = () => {
       seasonOrStage: compStage.trim() || settings.seasonOrStage,
       adminPin: adminPin.trim() || '1234',
     });
+    setIsSettingsSaved(true);
+    setTimeout(() => setIsSettingsSaved(false), 2500);
+    showToast('Competition settings saved successfully!', 'success', 'Settings Saved!');
   };
 
   const handleExportJSON = () => {
@@ -71,7 +78,9 @@ export const AdminPanel: React.FC = () => {
     a.download = `ros_legacy_backup_${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    showToast('Tournament backup JSON exported!');
+    setIsJsonExported(true);
+    setTimeout(() => setIsJsonExported(false), 2500);
+    showToast('Tournament backup JSON exported!', 'success', 'Backup Downloaded');
   };
 
   const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,10 +237,23 @@ export const AdminPanel: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-rose-900/30 transition-colors"
+              className={`w-full py-2.5 px-4 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-md transition-all active:scale-95 ${
+                isSettingsSaved
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/50 ring-2 ring-emerald-400'
+                  : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30'
+              }`}
             >
-              <Save className="w-4 h-4" />
-              Save Competition Settings
+              {isSettingsSaved ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
+                  <span>✓ Settings Saved Successfully!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Save Competition Settings</span>
+                </>
+              )}
             </button>
           </form>
         </div>
@@ -312,10 +334,18 @@ export const AdminPanel: React.FC = () => {
             <button
               type="button"
               onClick={handleExportJSON}
-              className="p-3 bg-[#0b0e14] hover:bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 flex flex-col items-center justify-center gap-1.5 transition-colors"
+              className={`p-3 border rounded-xl text-xs font-semibold flex flex-col items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                isJsonExported
+                  ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                  : 'bg-[#0b0e14] hover:bg-slate-800/80 border-slate-700 text-slate-200'
+              }`}
             >
-              <Download className="w-5 h-5 text-amber-400" />
-              <span>Backup JSON</span>
+              {isJsonExported ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              ) : (
+                <Download className="w-5 h-5 text-amber-400" />
+              )}
+              <span>{isJsonExported ? '✓ Exported!' : 'Backup JSON'}</span>
             </button>
 
             <label className="p-3 bg-[#0b0e14] hover:bg-slate-800/80 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer">

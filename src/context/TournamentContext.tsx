@@ -29,6 +29,16 @@ import {
   DEFAULT_SCORING_SETTINGS,
 } from '../utils/scoringUtils';
 
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface ToastNotification {
+  id: string;
+  message: string;
+  type: ToastType;
+  title?: string;
+  duration?: number;
+}
+
 interface TournamentContextType {
   teams: Team[];
   leaderboard: LeaderboardEntry[];
@@ -39,7 +49,9 @@ interface TournamentContextType {
   isAdmin: boolean;
   rosterDisplayMode: RosterDisplayMode;
   searchQuery: string;
+  toast: ToastNotification | null;
   toastMessage: string | null;
+  hideToast: () => void;
   setSearchQuery: (q: string) => void;
   setRosterDisplayMode: (mode: RosterDisplayMode) => void;
   loginAdmin: (pin: string) => boolean;
@@ -75,7 +87,7 @@ interface TournamentContextType {
     chickenDinner: boolean
   ) => { success: boolean; error?: string };
   deleteGameResult: (resultId: string) => boolean;
-  showToast: (message: string) => void;
+  showToast: (message: string, type?: ToastType, title?: string) => void;
 }
 
 const STORAGE_KEYS = {
@@ -176,13 +188,95 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [toast, setToast] = useState<ToastNotification | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const showToast = (message: string) => {
+  const hideToast = () => {
+    setToast(null);
+    setToastMessage(null);
+  };
+
+  const showToast = (message: string, explicitType?: ToastType, explicitTitle?: string) => {
+    let resolvedType: ToastType = explicitType || 'info';
+    let resolvedTitle = explicitTitle;
+
+    if (!explicitType) {
+      const lower = message.toLowerCase();
+      if (
+        lower.includes('saved') ||
+        lower.includes('added') ||
+        lower.includes('unlocked') ||
+        lower.includes('restored') ||
+        lower.includes('updated') ||
+        lower.includes('generated') ||
+        lower.includes('assigned') ||
+        lower.includes('exported') ||
+        lower.includes('success') ||
+        lower.includes('cleared') ||
+        lower.includes('deleted') ||
+        lower.includes('removed') ||
+        lower.includes('allocated') ||
+        lower.includes('complete')
+      ) {
+        resolvedType = 'success';
+        if (!resolvedTitle) resolvedTitle = 'Action Successful';
+      } else if (
+        lower.includes('restricted') ||
+        lower.includes('error') ||
+        lower.includes('invalid') ||
+        lower.includes('required') ||
+        lower.includes('failed') ||
+        lower.includes('fail') ||
+        lower.includes('incorrect')
+      ) {
+        resolvedType = 'error';
+        if (!resolvedTitle) resolvedTitle = 'Attention Required';
+      } else {
+        resolvedType = 'info';
+        if (!resolvedTitle) resolvedTitle = 'Notice';
+      }
+    } else if (!resolvedTitle) {
+      resolvedTitle = resolvedType === 'success' ? 'Saved' : resolvedType === 'error' ? 'Notice' : 'Information';
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const now = ctx.currentTime;
+        if (resolvedType === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, now); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.26);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.26);
+        }
+      }
+    } catch {
+      // ignore audio restriction
+    }
+
+    const newToast: ToastNotification = {
+      id: `toast-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      message,
+      type: resolvedType,
+      title: resolvedTitle,
+      duration: 3500,
+    };
+
+    setToast(newToast);
     setToastMessage(message);
+
     setTimeout(() => {
+      setToast((prev) => (prev?.id === newToast.id ? null : prev));
       setToastMessage((prev) => (prev === message ? null : prev));
-    }, 3200);
+    }, 3500);
   };
 
   // Sync state to localStorage
@@ -335,9 +429,10 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const quickAdjustPoints = (id: string, delta: number) => {
     if (!isAdmin) {
-      showToast('Action restricted: Administrator authorization required.');
+      showToast('Action restricted: Administrator authorization required.', 'error', 'Restricted');
       return;
     }
+    const target = teams.find((t) => t.id === id);
     setTeams((prev) =>
       prev.map((t) => {
         if (t.id === id) {
@@ -346,6 +441,12 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         }
         return t;
       })
+    );
+    const sign = delta > 0 ? `+${delta}` : `${delta}`;
+    showToast(
+      `${sign} point${Math.abs(delta) > 1 ? 's' : ''} updated for ${target?.name || 'team'}!`,
+      'success',
+      'Points Updated'
     );
   };
 
@@ -646,7 +747,9 @@ export const TournamentProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         isAdmin,
         rosterDisplayMode,
         searchQuery,
+        toast,
         toastMessage,
+        hideToast,
         setSearchQuery,
         setRosterDisplayMode,
         loginAdmin,

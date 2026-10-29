@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Team, Player } from '../../types';
-import { X, Crown, Plus, Trash2, Users, Shield } from 'lucide-react';
+import { X, Crown, Plus, Trash2, Users, Shield, CheckCircle2 } from 'lucide-react';
 
 interface TeamModalProps {
   team?: Team | null;
@@ -24,6 +24,8 @@ export const TeamModal: React.FC<TeamModalProps> = ({
   const [name, setName] = useState(team?.name || '');
   const [tag, setTag] = useState(team?.tag || '');
   const [logo, setLogo] = useState(team?.logo || '🛡️');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [members, setMembers] = useState<Player[]>(
     team?.members || [
       { id: `p-${Date.now()}-1`, ign: 'Leader_IGN', isCaptain: true, role: 'IGL' },
@@ -63,18 +65,29 @@ export const TeamModal: React.FC<TeamModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      name: name.trim(),
-      tag: tag.trim() || undefined,
-      logo,
-      points: team?.points || 0,
-      prize: team?.prize || '—',
-      wins: team?.wins || 0,
-      kills: team?.kills || 0,
-      matchesPlayed: team?.matchesPlayed || 0,
-      members,
-    });
-    onClose();
+    if (isSubmitting || isSaved) return;
+
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setIsSaved(true);
+      onSave({
+        name: name.trim(),
+        tag: tag.trim() || undefined,
+        logo,
+        points: team?.points || 0,
+        prize: team?.prize || '—',
+        wins: team?.wins || 0,
+        kills: team?.kills || 0,
+        matchesPlayed: team?.matchesPlayed || 0,
+        members,
+      });
+
+      setTimeout(() => {
+        setIsSaved(false);
+        onClose();
+      }, 500);
+    }, 250);
   };
 
   return (
@@ -223,15 +236,33 @@ export const TeamModal: React.FC<TeamModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg"
+              disabled={isSubmitting || isSaved}
+              className="px-4 py-2 text-sm text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-lg active:scale-95 transition-all disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white rounded-lg shadow-lg shadow-rose-900/40"
+              disabled={isSubmitting || isSaved}
+              className={`px-5 py-2 text-sm font-semibold rounded-lg shadow-lg transition-all active:scale-95 flex items-center gap-2 ${
+                isSaved
+                  ? 'bg-emerald-600 text-white shadow-emerald-950/50 ring-2 ring-emerald-400'
+                  : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/40'
+              }`}
             >
-              {isEditing ? 'Save Changes' : 'Create Team'}
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Saving...</span>
+                </>
+              ) : isSaved ? (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-200 stroke-[2.5]" />
+                  <span>✓ Saved!</span>
+                </>
+              ) : (
+                <span>{isEditing ? 'Save Changes' : 'Create Team'}</span>
+              )}
             </button>
           </div>
         </form>

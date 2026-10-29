@@ -14,7 +14,15 @@ import {
 } from 'lucide-react';
 
 export const PrizeSettingsPanel: React.FC = () => {
-  const { settings, updatePrizeSettings, applyPlacementPrizes, isAdmin, gameLeaderboard, leaderboard } = useTournament();
+  const {
+    settings,
+    updatePrizeSettings,
+    applyPlacementPrizes,
+    isAdmin,
+    gameLeaderboard,
+    leaderboard,
+    showToast,
+  } = useTournament();
 
   const currentPrizes = settings.prizes || DEFAULT_PRIZE_SETTINGS;
 
@@ -25,6 +33,8 @@ export const PrizeSettingsPanel: React.FC = () => {
   const [autoApply, setAutoApply] = useState(currentPrizes.autoApply ?? true);
 
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isApplied, setIsApplied] = useState(false);
 
   useEffect(() => {
     if (settings.prizes) {
@@ -68,6 +78,9 @@ export const PrizeSettingsPanel: React.FC = () => {
       });
     }
 
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2500);
+    showToast('Prize pool saved & assigned to tournament standings!', 'success', 'Prizes Saved!');
     setSuccessNotice('Prize pool saved & assigned to tournament standings!');
     setTimeout(() => setSuccessNotice(null), 3500);
   };
@@ -79,6 +92,9 @@ export const PrizeSettingsPanel: React.FC = () => {
       top3: top3.trim() || '₱100',
       top4: top4.trim() || '—',
     });
+    setIsApplied(true);
+    setTimeout(() => setIsApplied(false), 2500);
+    showToast('Prizes allocated directly to current 1st, 2nd, and 3rd place teams!', 'success', 'Prizes Distributed!');
     setSuccessNotice('Prizes allocated directly to current 1st, 2nd, and 3rd place teams!');
     setTimeout(() => setSuccessNotice(null), 3500);
   };
@@ -268,18 +284,44 @@ export const PrizeSettingsPanel: React.FC = () => {
             type="button"
             onClick={handleApplyNow}
             disabled={activeTeamsCount === 0}
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors disabled:opacity-50"
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50 border ${
+              isApplied
+                ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-950/40'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+            }`}
           >
-            <Gift className="w-4 h-4 text-emerald-400" />
-            <span>Apply Prizes to Current Top Teams ({activeTeamsCount} Teams)</span>
+            {isApplied ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                <span>✓ Prizes Distributed to Top Teams!</span>
+              </>
+            ) : (
+              <>
+                <Gift className="w-4 h-4 text-emerald-400" />
+                <span>Apply Prizes to Current Top Teams ({activeTeamsCount} Teams)</span>
+              </>
+            )}
           </button>
 
           <button
             type="submit"
-            className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-emerald-950/40 transition-colors"
+            className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-lg transition-all active:scale-95 ${
+              isSaved
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-950/60 ring-2 ring-emerald-300'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/40'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>Save Prize Settings</span>
+            {isSaved ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-slate-950 stroke-[2.5]" />
+                <span>✓ Prize Settings Saved!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Prize Settings</span>
+              </>
+            )}
           </button>
         </div>
       </form>
