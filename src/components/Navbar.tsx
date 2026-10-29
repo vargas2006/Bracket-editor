@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useTournament } from '../context/TournamentContext';
 import { AdminLockModal } from './Admin/AdminLockModal';
+import { DiscordIcon } from './Common/DiscordIcon';
 import {
   Trophy,
   GitBranch,
@@ -77,7 +78,19 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
           </nav>
 
           {/* Right side status & Admin toggle */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Discord Community Link */}
+            <a
+              href="https://discord.gg/6CzpykTdQC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#5865F2]/15 text-[#5865F2] hover:bg-[#5865F2] hover:text-white border border-[#5865F2]/40 shadow-sm transition-all group"
+              title="Join Rules of Survival Discord Community"
+            >
+              <DiscordIcon className="w-4 h-4 fill-current transition-transform group-hover:scale-110" />
+              <span className="hidden sm:inline">Discord</span>
+            </a>
+
             {/* Admin status pill */}
             <button
               onClick={() => setIsAuthModalOpen(true)}
@@ -136,6 +149,18 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
               </button>
             );
           })}
+
+          <div className="pt-2 border-t border-slate-800">
+            <a
+              href="https://discord.gg/6CzpykTdQC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-xs font-bold bg-[#5865F2] text-white shadow-md shadow-[#5865F2]/20 hover:bg-[#4752c4] transition-all"
+            >
+              <DiscordIcon className="w-4 h-4 fill-current" />
+              <span>Join Discord Server</span>
+            </a>
+          </div>
         </div>
       )}
 

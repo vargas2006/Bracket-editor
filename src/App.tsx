@@ -6,6 +6,7 @@ import { TournamentBracket } from './components/Bracket/TournamentBracket';
 import { TeamsPage } from './components/Teams/TeamsPage';
 import { AdminPanel } from './components/Admin/AdminPanel';
 import { Toast } from './components/Common/Toast';
+import { DiscordIcon } from './components/Common/DiscordIcon';
 import {
   Flame,
   Shield,
@@ -106,15 +107,28 @@ const AppContent: React.FC = () => {
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-[#07090e] py-6 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-slate-400">ROS LEGACY</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-slate-300">RULES OF SURVIVAL</span>
             <span>•</span>
-            <span>Community Tournament & Bracket Management System</span>
+            <span className="text-slate-400">ROS COMMUNITY</span>
+            <span>•</span>
+            <span>Tournament & Bracket Management System</span>
           </div>
-          <div className="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
-            <span>Admin PIN: default is 1234</span>
+
+          <div className="flex flex-wrap items-center gap-4 text-slate-400 font-mono text-[11px]">
+            <a
+              href="https://discord.gg/6CzpykTdQC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#5865F2]/20 hover:bg-[#5865F2] text-[#7289da] hover:text-white border border-[#5865F2]/30 transition-all font-sans font-semibold text-xs"
+            >
+              <DiscordIcon className="w-3.5 h-3.5 fill-current" />
+              <span>Join Discord</span>
+            </a>
             <span>•</span>
-            <span>Local Storage Autosave Active</span>
+            <span>Admin PIN: 1234</span>
+            <span>•</span>
+            <span>Autosave Active</span>
           </div>
         </div>
       </footer>
