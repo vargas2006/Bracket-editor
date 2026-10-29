@@ -253,15 +253,6 @@ export const GameResultEntryPanel: React.FC = () => {
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Reset Game {activeGame}</span>
           </button>
-
-          <button
-            type="button"
-            onClick={handleSaveAllTeams}
-            className="px-5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-rose-900/40 transition-all"
-          >
-            <Save className="w-4 h-4" />
-            <span>Save All Teams (Game {activeGame})</span>
-          </button>
         </div>
       </div>
 

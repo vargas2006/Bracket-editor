@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Team, Player } from '../../types';
-import { X, Crown, Plus, Trash2, Trophy, Gift, Users, Shield } from 'lucide-react';
+import { X, Crown, Plus, Trash2, Users, Shield } from 'lucide-react';
 
 interface TeamModalProps {
   team?: Team | null;
@@ -24,10 +24,6 @@ export const TeamModal: React.FC<TeamModalProps> = ({
   const [name, setName] = useState(team?.name || '');
   const [tag, setTag] = useState(team?.tag || '');
   const [logo, setLogo] = useState(team?.logo || '🛡️');
-  const [points, setPoints] = useState(team?.points || 0);
-  const [prize, setPrize] = useState(team?.prize || '');
-  const [wins, setWins] = useState(team?.wins || 0);
-  const [kills, setKills] = useState(team?.kills || 0);
   const [members, setMembers] = useState<Player[]>(
     team?.members || [
       { id: `p-${Date.now()}-1`, ign: 'Leader_IGN', isCaptain: true, role: 'IGL' },
@@ -71,11 +67,11 @@ export const TeamModal: React.FC<TeamModalProps> = ({
       name: name.trim(),
       tag: tag.trim() || undefined,
       logo,
-      points: Number(points) || 0,
-      prize: prize.trim() || '—',
-      wins: Number(wins) || 0,
-      kills: Number(kills) || 0,
-      matchesPlayed: (team?.matchesPlayed || 0),
+      points: team?.points || 0,
+      prize: team?.prize || '—',
+      wins: team?.wins || 0,
+      kills: team?.kills || 0,
+      matchesPlayed: team?.matchesPlayed || 0,
       members,
     });
     onClose();
@@ -97,7 +93,7 @@ export const TeamModal: React.FC<TeamModalProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-bold text-white uppercase tracking-wider">
-              {isEditing ? `Edit Team — ${team.name}` : 'Register New ROS Legacy Team'}
+              {isEditing ? `Edit Team — ${team.name}` : 'Register New Team'}
             </h3>
             <p className="text-xs text-slate-400">
               Configure team profile, members list, and assign the team Captain.
@@ -153,62 +149,6 @@ export const TeamModal: React.FC<TeamModalProps> = ({
                 onChange={(e) => setTag(e.target.value)}
                 placeholder="e.g. ZE"
                 className="w-full px-3 py-2 bg-[#0b0e14] border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-rose-500 font-mono"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Trophy className="w-3.5 h-3.5 text-amber-400" />
-                Points
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={points}
-                onChange={(e) => setPoints(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#0b0e14] border border-slate-700 rounded-lg text-amber-300 font-bold font-mono text-sm focus:outline-none focus:border-amber-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Gift className="w-3.5 h-3.5 text-emerald-400" />
-                Prize (Optional)
-              </label>
-              <input
-                type="text"
-                value={prize}
-                onChange={(e) => setPrize(e.target.value)}
-                placeholder="₱1,000 / —"
-                className="w-full px-3 py-2 bg-[#0b0e14] border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-rose-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Wins
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={wins}
-                onChange={(e) => setWins(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#0b0e14] border border-slate-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-rose-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                Kills
-              </label>
-              <input
-                type="number"
-                min="0"
-                value={kills}
-                onChange={(e) => setKills(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-[#0b0e14] border border-slate-700 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-rose-500"
               />
             </div>
           </div>
