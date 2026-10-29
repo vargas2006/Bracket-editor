@@ -38,7 +38,7 @@ const AppContent: React.FC = () => {
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold uppercase tracking-wider text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20">
                   <Flame className="w-3.5 h-3.5" />
-                  {settings.seasonOrStage || 'OFFICIAL COMPETITION'}
+                  {settings.seasonOrStage || 'ROS COMMUNITY TOURNAMENT'}
                 </span>
                 <span className="text-xs text-slate-400 font-mono">
                   Battle Royale Tournament Series
@@ -48,7 +48,7 @@ const AppContent: React.FC = () => {
                 {settings.competitionName}
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Official Rules of Survival (ROS) Legacy community tournament rankings, live match
+                Rules of Survival (ROS) community tournament rankings, live match
                 scoring, team rosters, and bracket progression.
               </p>
             </div>

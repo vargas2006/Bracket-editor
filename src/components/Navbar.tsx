@@ -10,7 +10,7 @@ import {
   ShieldAlert,
   Menu,
   X,
-  Swords,
+  Sword,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -36,17 +36,16 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo & Title */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('leaderboard')}>
-            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-rose-900 border border-rose-500/50 flex items-center justify-center text-white shadow-lg shadow-rose-950/50">
-              <Swords className="w-5 h-5 text-rose-200" />
-              <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 border-2 border-[#0a0d14]" />
+            <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 via-rose-700 to-red-900 border border-rose-500/60 flex items-center justify-center text-white shadow-lg shadow-rose-950/60">
+              <Sword className="w-5 h-5 text-white" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-lg tracking-wider text-white uppercase font-sans">
-                  ROS <span className="text-rose-500">LEGACY</span>
+                  RULES OF <span className="text-rose-500">SURVIVAL</span>
                 </span>
                 <span className="text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400 px-1.5 py-0.5 rounded border border-rose-500/30">
-                  ESPORTS
+                  ROS COMMUNITY
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 font-mono tracking-wide hidden sm:block">

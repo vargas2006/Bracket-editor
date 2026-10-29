@@ -380,7 +380,7 @@ export const LeaderboardTable: React.FC = () => {
 
           <button
             onClick={() => setIsExportImageOpen(true)}
-            title="Export official graphic image for Discord / Community"
+            title="Export graphic image for Discord / Community"
             className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
           >
             <ImageIcon className="w-3.5 h-3.5 text-rose-400" />

@@ -11,8 +11,8 @@ export const DEFAULT_PRIZE_SETTINGS: TournamentPrizeSettings = {
 };
 
 export const INITIAL_SETTINGS: TournamentSettings = {
-  competitionName: 'ROS LEGACY CHAMPIONS CUP 2026',
-  seasonOrStage: 'GRAND FINALS STAGE',
+  competitionName: 'RULES OF SURVIVAL CHAMPIONS CUP 2026',
+  seasonOrStage: 'ROS COMMUNITY TOURNAMENT',
   pointsPerKill: 5,
   pointsForChickenDinner: 25,
   adminPin: '1234',

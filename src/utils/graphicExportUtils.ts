@@ -196,8 +196,8 @@ export function renderLeaderboardToCanvas(
   // 3. HEADER SECTION
   let currentY = 50;
 
-  // Pill badge: RULES OF SURVIVAL LEGACY • OFFICIAL ESPORTS TOURNAMENT
-  const badgeText = 'RULES OF SURVIVAL LEGACY • OFFICIAL ESPORTS TOURNAMENT';
+  // Pill badge: ⚔️ RULES OF SURVIVAL • ROS COMMUNITY
+  const badgeText = '⚔️ RULES OF SURVIVAL • ROS COMMUNITY';
   ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const badgeWidth = ctx.measureText(badgeText).width + 36;
   drawRoundedRect(
@@ -248,14 +248,14 @@ export function renderLeaderboardToCanvas(
   // Main Tournament Title
   ctx.fillStyle = '#ffffff';
   ctx.font = '900 38px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const competitionTitle = (settings.competitionName || 'ROS LEGACY TOURNAMENT').toUpperCase();
+  const competitionTitle = (settings.competitionName || 'RULES OF SURVIVAL').toUpperCase();
   ctx.fillText(competitionTitle, paddingX, currentY);
 
   // Subtitle + Metadata Tags
   currentY += 30;
   ctx.fillStyle = '#94a3b8';
   ctx.font = '600 15px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  const subtitle = `${(settings.seasonOrStage || 'OFFICIAL COMPETITION').toUpperCase()} • TOURNAMENT STANDINGS & MATCH RESULTS`;
+  const subtitle = `${(settings.seasonOrStage || 'ROS COMMUNITY TOURNAMENT').toUpperCase()} • TOURNAMENT STANDINGS & MATCH RESULTS`;
   ctx.fillText(subtitle, paddingX, currentY);
 
   // Scoring Settings Values
@@ -996,11 +996,11 @@ export function renderLeaderboardToCanvas(
   ctx.textAlign = 'left';
   ctx.fillStyle = '#cbd5e1';
   ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-  ctx.fillText('RULES OF SURVIVAL LEGACY • OFFICIAL ESPORTS TOURNAMENT', paddingX + 24, footerMidY - 8);
+  ctx.fillText('⚔️ RULES OF SURVIVAL • ROS COMMUNITY', paddingX + 24, footerMidY - 8);
 
   ctx.fillStyle = '#64748b';
   ctx.font = '11px monospace';
-  ctx.fillText('VERIFIED COMPETITION RECORDS • ALL MATCH RESULTS CONFIRMED', paddingX + 24, footerMidY + 10);
+  ctx.fillText('ROS COMMUNITY TOURNAMENT RECORDS • MATCH RESULTS CONFIRMED', paddingX + 24, footerMidY + 10);
 
   // Center: Scoring rule summary
   ctx.textAlign = 'center';
@@ -1016,7 +1016,7 @@ export function renderLeaderboardToCanvas(
   ctx.textAlign = 'right';
   ctx.fillStyle = '#e2e8f0';
   ctx.font = 'bold 12px monospace';
-  ctx.fillText('ROS LEGACY COMMUNITY PORTAL', width - paddingX - 24, footerMidY - 8);
+  ctx.fillText('RULES OF SURVIVAL COMMUNITY', width - paddingX - 24, footerMidY - 8);
 
   ctx.fillStyle = '#64748b';
   ctx.font = '10px monospace';

@@ -141,14 +141,14 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-wider">
-                  Official Graphic Leaderboard
+                  Leaderboard Graphic Export
                 </h3>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                  HD 1600px ESPORTS
+                  HD 1600px ROS COMMUNITY
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Broadcast-grade tournament visual inspired by official ROS Legacy esports graphics.
+                High-definition tournament visual for Rules of Survival ROS Community.
               </p>
             </div>
           </div>
@@ -272,7 +272,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
               <div className="relative group max-w-full rounded-xl overflow-hidden shadow-2xl border-2 border-slate-700/60 bg-[#0d101a]">
                 <img
                   src={previewDataUrl}
-                  alt="Official Leaderboard Graphic Preview"
+                  alt="Rules of Survival Leaderboard Graphic Preview"
                   className="w-full h-auto object-contain max-h-[58vh] block rounded-lg select-none"
                 />
                 <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-slate-300 border border-white/10 pointer-events-none">
@@ -283,7 +283,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
           ) : (
             <div className="flex flex-col items-center gap-2 text-slate-500 py-12">
               <RefreshCw className="w-8 h-8 animate-spin text-rose-500" />
-              <p className="text-sm">Rendering esports visual graphic...</p>
+              <p className="text-sm">Rendering tournament visual graphic...</p>
             </div>
           )}
         </div>
