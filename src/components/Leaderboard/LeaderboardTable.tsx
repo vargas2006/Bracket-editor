@@ -3,7 +3,6 @@ import { useTournament } from '../../context/TournamentContext';
 import type { LeaderboardEntry, Team, GameLeaderboardEntry } from '../../types';
 import { formatPrize, formatOrdinal, exportToCSV } from '../../utils/leaderboardUtils';
 import { RosterPopover } from './RosterPopover';
-import { QuickEditModal } from './QuickEditModal';
 import { LeaderboardImageExport } from './LeaderboardImageExport';
 import { ConfirmModal } from '../Common/ConfirmModal';
 import {
@@ -13,14 +12,10 @@ import {
   ChevronRight,
   Crown,
   Search,
-  Plus,
   RotateCcw,
   Download,
   Image as ImageIcon,
-  Edit2,
   Trash2,
-  PlusCircle,
-  MinusCircle,
   Eye,
   Users,
   Gift,
@@ -42,11 +37,8 @@ export const LeaderboardTable: React.FC = () => {
     setRosterDisplayMode,
     searchQuery,
     setSearchQuery,
-    quickAdjustPoints,
-    updateTeam,
     deleteTeam,
     resetLeaderboardPoints,
-    addTeam,
     showToast,
   } = useTournament();
 
@@ -58,7 +50,6 @@ export const LeaderboardTable: React.FC = () => {
 
   const [expandedTeamIds, setExpandedTeamIds] = useState<Record<string, boolean>>({});
   const [activeHoverTeamId, setActiveHoverTeamId] = useState<string | null>(null);
-  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [isExportImageOpen, setIsExportImageOpen] = useState(false);
   const [isExportingCSV, setIsExportingCSV] = useState(false);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
@@ -94,24 +85,6 @@ export const LeaderboardTable: React.FC = () => {
     exportToCSV(leaderboard, settings.competitionName, gameLeaderboard, totalGames);
     showToast('Tournament leaderboard CSV downloaded successfully!', 'success', 'Export Complete');
     setTimeout(() => setIsExportingCSV(false), 2200);
-  };
-
-  const handleQuickAddTeam = () => {
-    const num = leaderboard.length + 1;
-    addTeam({
-      name: `NEW TEAM ${num}`,
-      tag: `NT${num}`,
-      logo: '🛡️',
-      points: 0,
-      prize: '—',
-      wins: 0,
-      kills: 0,
-      matchesPlayed: 0,
-      members: [
-        { id: `p-${Date.now()}-1`, ign: `Captain_${num}`, isCaptain: true, role: 'IGL' },
-        { id: `p-${Date.now()}-2`, ign: `Fragger_${num}`, isCaptain: false, role: 'Fragger' },
-      ],
-    });
   };
 
   const getRankBadge = (rank: number, points?: number) => {
@@ -413,24 +386,14 @@ export const LeaderboardTable: React.FC = () => {
 
           {/* Admin Controls */}
           {isAdmin && (
-            <>
-              <button
-                onClick={handleQuickAddTeam}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-rose-900/30 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Team
-              </button>
-
-              <button
-                onClick={() => setIsResetConfirmOpen(true)}
-                title="Reset all team points and game results to 0"
-                className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Reset Points</span>
-              </button>
-            </>
+            <button
+              onClick={() => setIsResetConfirmOpen(true)}
+              title="Reset all team points and game results to 0"
+              className="p-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden md:inline">Reset Points</span>
+            </button>
           )}
         </div>
       </div>
@@ -479,7 +442,6 @@ export const LeaderboardTable: React.FC = () => {
                     const isTop3 = entry.rank === 3 && entry.totalPoints > 0;
                     const isExpanded = !!expandedTeamIds[entry.teamId];
                     const captain = entry.members.find((m) => m.isCaptain);
-                    const originalTeam = leaderboard.find((t) => t.id === entry.teamId);
 
                     return (
                       <React.Fragment key={entry.teamId}>
@@ -686,16 +648,7 @@ export const LeaderboardTable: React.FC = () => {
                           {/* Admin Controls */}
                           {isAdmin && (
                             <td className="py-3 px-4 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
-                                {originalTeam && (
-                                  <button
-                                    onClick={() => setEditingTeam(originalTeam)}
-                                    title="Edit Team"
-                                    className="p-1.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded transition-colors"
-                                  >
-                                    <Edit2 className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
+                              <div className="flex items-center justify-end">
                                 <button
                                   onClick={() =>
                                     setTeamToDelete({ id: entry.teamId, name: entry.teamName })
@@ -953,30 +906,7 @@ export const LeaderboardTable: React.FC = () => {
                           {/* Admin Action Buttons */}
                           {isAdmin && (
                             <td className="py-3 px-4 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => quickAdjustPoints(entry.id, -1)}
-                                  title="Subtract 1 point"
-                                  className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
-                                >
-                                  <MinusCircle className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => quickAdjustPoints(entry.id, 1)}
-                                  title="Add 1 point"
-                                  className="p-1 text-slate-400 hover:text-emerald-400 transition-colors"
-                                >
-                                  <PlusCircle className="w-4 h-4" />
-                                </button>
-
-                                <button
-                                  onClick={() => setEditingTeam(entry)}
-                                  title="Edit team"
-                                  className="p-1.5 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded transition-colors"
-                                >
-                                  <Edit2 className="w-3.5 h-3.5" />
-                                </button>
-
+                              <div className="flex items-center justify-end">
                                 <button
                                   onClick={() => setTeamToDelete({ id: entry.id, name: entry.name })}
                                   title="Delete team"
@@ -1045,13 +975,6 @@ export const LeaderboardTable: React.FC = () => {
       )}
 
       {/* Modals */}
-      <QuickEditModal
-        team={editingTeam}
-        isOpen={!!editingTeam}
-        onClose={() => setEditingTeam(null)}
-        onSave={(id, updates) => updateTeam(id, updates)}
-      />
-
       <LeaderboardImageExport
         entries={leaderboard}
         gameEntries={gameLeaderboard}

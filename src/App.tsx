@@ -11,7 +11,6 @@ import { DiscordIcon } from './components/Common/DiscordIcon';
 import {
   Flame,
   Shield,
-  Target,
   Crown,
   Trophy,
 } from 'lucide-react';
@@ -28,7 +27,6 @@ const AppContent: React.FC = () => {
   const { settings, leaderboard, teams } = useTournament();
 
   const totalPoints = teams.reduce((acc, t) => acc + t.points, 0);
-  const totalKills = teams.reduce((acc, t) => acc + (t.kills || 0), 0);
   const topTeam = leaderboard[0];
 
   return (
@@ -89,14 +87,6 @@ const AppContent: React.FC = () => {
                 <div>
                   <div className="text-[10px] uppercase font-bold text-slate-400">Squads</div>
                   <div className="text-xs font-bold text-white font-mono">{teams.length} Teams</div>
-                </div>
-              </div>
-
-              <div className="bg-[#121622] border border-slate-800 rounded-xl px-3.5 py-2 flex items-center gap-2.5 shadow-lg">
-                <Target className="w-4 h-4 text-emerald-400" />
-                <div>
-                  <div className="text-[10px] uppercase font-bold text-slate-400">Total Kills</div>
-                  <div className="text-xs font-bold text-white font-mono">{totalKills} Frags</div>
                 </div>
               </div>
             </div>
