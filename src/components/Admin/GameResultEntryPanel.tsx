@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTournament } from '../../context/TournamentContext';
 import { calculateGamePoints } from '../../utils/scoringUtils';
 import { ConfirmModal } from '../Common/ConfirmModal';
+import { TeamLogo } from '../Common/TeamLogo';
 import {
   Trophy,
   Crosshair,
@@ -410,9 +411,9 @@ export const GameResultEntryPanel: React.FC = () => {
                       {/* Team Name & Tag */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2.5">
-                          <span className="text-xl flex-shrink-0 select-none">
-                            {team.logo || '🛡️'}
-                          </span>
+                          <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 bg-slate-800/80 border border-slate-700/60 text-base">
+                            <TeamLogo logo={team.logo} name={team.name} className="w-full h-full text-base" />
+                          </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="font-bold text-white text-xs sm:text-sm tracking-wide">

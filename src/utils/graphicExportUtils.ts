@@ -1,5 +1,48 @@
 import type { GameLeaderboardEntry, LeaderboardEntry, TournamentSettings } from '../types';
 import { formatPrize, formatOrdinal } from './leaderboardUtils';
+import { isImageLogo } from '../components/Common/TeamLogo';
+
+const canvasImageCache = new Map<string, HTMLImageElement>();
+
+function getLoadedImage(src: string): HTMLImageElement | null {
+  if (!src) return null;
+  let img = canvasImageCache.get(src);
+  if (!img) {
+    img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = src;
+    canvasImageCache.set(src, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+function drawLogoOnCanvas(
+  ctx: CanvasRenderingContext2D,
+  logo: string,
+  x: number,
+  y: number,
+  size: number,
+  fallbackEmoji: string
+) {
+  if (isImageLogo(logo)) {
+    const img = getLoadedImage(logo);
+    if (img) {
+      ctx.save();
+      ctx.beginPath();
+      if (typeof ctx.roundRect === 'function') {
+        ctx.roundRect(x, y, size, size, 6);
+      } else {
+        ctx.rect(x, y, size, size);
+      }
+      ctx.clip();
+      ctx.drawImage(img, x, y, size, size);
+      ctx.restore();
+      return;
+    }
+  }
+  const text = isImageLogo(logo) ? fallbackEmoji : (logo || fallbackEmoji);
+  ctx.fillText(text, x + size / 2, y + size / 2 + 1);
+}
 
 export interface GraphicExportOptions {
   mode: 'gameMatrix' | 'standings';
@@ -329,7 +372,14 @@ export function renderLeaderboardToCanvas(
       ctx.font = '26px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(logo, logoBoxX + logoBoxSize / 2, logoBoxY + logoBoxSize / 2 + 1);
+      drawLogoOnCanvas(
+        ctx,
+        logo,
+        logoBoxX + 4,
+        logoBoxY + 4,
+        logoBoxSize - 8,
+        place === 1 ? '👑' : place === 2 ? '🥈' : '🥉'
+      );
 
       // Content Middle
       const textX = logoBoxX + logoBoxSize + 14;
@@ -749,7 +799,7 @@ export function renderLeaderboardToCanvas(
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '17px sans-serif';
-        ctx.fillText(logo, teamX + avatarSize / 2, avatarY + avatarSize / 2 + 1);
+        drawLogoOnCanvas(ctx, logo, teamX + 2, avatarY + 2, avatarSize - 4, '🛡️');
 
         // Name + Tag
         const nameX = teamX + avatarSize + 12;

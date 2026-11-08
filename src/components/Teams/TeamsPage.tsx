@@ -4,6 +4,7 @@ import type { Team } from '../../types';
 import { formatPrize } from '../../utils/leaderboardUtils';
 import { TeamModal } from './TeamModal';
 import { ConfirmModal } from '../Common/ConfirmModal';
+import { TeamLogo } from '../Common/TeamLogo';
 import {
   Plus,
   Crown,
@@ -13,6 +14,7 @@ import {
   Edit2,
   Trash2,
   User,
+  Users,
 } from 'lucide-react';
 
 export const TeamsPage: React.FC = () => {
@@ -107,118 +109,134 @@ export const TeamsPage: React.FC = () => {
             return (
               <div
                 key={team.id}
-                className="bg-[#111520] border border-slate-800/80 hover:border-slate-700 rounded-2xl p-5 shadow-xl transition-all duration-200 flex flex-col justify-between group"
+                className="bg-[#111520] border border-slate-800/80 hover:border-slate-700 rounded-2xl p-4 sm:p-5 shadow-xl transition-all duration-200 flex flex-col justify-between group"
               >
                 <div>
-                  {/* Team Card Top Header */}
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
-                        {team.logo || '🛡️'}
+                  {/* Card Split Layout: Left = Logo Picture (Red area), Right = Info & Members (Yellow area) */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start">
+                    {/* Left: Big Team Logo Picture (Red circled area) */}
+                    <div className="w-full sm:w-36 md:w-40 flex-shrink-0 flex flex-col items-center">
+                      <div className="w-full aspect-square rounded-2xl bg-[#090c13] border-2 border-slate-700/80 group-hover:border-rose-500/40 flex items-center justify-center text-5xl shadow-xl shadow-black/40 overflow-hidden relative transition-colors duration-200">
+                        <TeamLogo
+                          logo={team.logo}
+                          name={team.name}
+                          className="w-full h-full text-5xl"
+                        />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h3 className="font-extrabold text-white text-base tracking-wide group-hover:text-rose-400 transition-colors">
+
+                      {team.tag && (
+                        <div className="mt-2 text-center w-full">
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-rose-400 font-bold border border-rose-500/20 inline-block truncate max-w-full">
+                            {team.tag}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: Team Info, Stats & Member Names (Yellow lines area) */}
+                    <div className="flex-1 min-w-0 w-full flex flex-col">
+                      {/* Top Header: Team Name & Admin Actions */}
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div className="min-w-0">
+                          <h3 className="font-extrabold text-white text-base sm:text-lg tracking-wide group-hover:text-rose-400 transition-colors truncate">
                             {team.name}
                           </h3>
-                          {team.tag && (
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-rose-400 font-bold border border-rose-500/20">
-                              {team.tag}
+                          <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 font-mono flex-wrap">
+                            <span className="flex items-center gap-1 text-amber-400 font-bold">
+                              <Trophy className="w-3.5 h-3.5" />
+                              {team.points} pts
                             </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-slate-400 font-mono">
-                          <span className="flex items-center gap-1 text-amber-400 font-bold">
-                            <Trophy className="w-3.5 h-3.5" />
-                            {team.points} pts
-                          </span>
-                          <span>•</span>
-                          <span>{team.kills ?? 0} Kills</span>
-                          <span>•</span>
-                          <span>{team.wins ?? 0} Wins</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {isAdmin && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setEditingTeam(team)}
-                          className="p-1.5 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 rounded-lg transition-colors"
-                          title="Edit Team & Roster"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setTeamToDelete(team)}
-                          className="p-1.5 text-slate-500 hover:text-rose-400 bg-slate-800/60 hover:bg-rose-950/40 rounded-lg transition-colors"
-                          title="Delete Team"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Prize Banner if assigned */}
-                  {team.prize && team.prize.trim() !== '' && team.prize !== '—' && (
-                    <div className="mb-4 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-400 font-medium">
-                      <Gift className="w-3.5 h-3.5 flex-shrink-0" />
-                      <span>Allocated Prize: {formatPrize(team.prize)}</span>
-                    </div>
-                  )}
-
-                  {/* Roster Section */}
-                  <div className="space-y-2 mb-4">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      <span>Active Squad Roster</span>
-                      <span className="text-slate-500">{team.members.length} Players</span>
-                    </div>
-
-                    {/* Captain */}
-                    {captain && (
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Crown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
-                          <span className="font-bold text-amber-200 font-mono truncate">
-                            {captain.ign}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {captain.role && (
-                            <span className="text-[10px] text-amber-400/80">{captain.role}</span>
-                          )}
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/40">
-                            Captain
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Other members */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                      {otherMembers.map((member) => (
-                        <div
-                          key={member.id}
-                          className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0a0d14] border border-slate-800 text-xs text-slate-300"
-                        >
-                          <div className="flex items-center gap-1.5 min-w-0">
-                            <User className="w-3 h-3 text-slate-500 flex-shrink-0" />
-                            <span className="font-mono text-slate-200 truncate">{member.ign}</span>
+                            <span>•</span>
+                            <span>{team.kills ?? 0} Kills</span>
+                            <span>•</span>
+                            <span>{team.wins ?? 0} Wins</span>
                           </div>
-                          {member.role && (
-                            <span className="text-[9px] text-slate-500 font-medium truncate ml-1">
-                              {member.role}
-                            </span>
-                          )}
                         </div>
-                      ))}
+
+                        {isAdmin && (
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => setEditingTeam(team)}
+                              className="p-1.5 text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-700 rounded-lg transition-colors"
+                              title="Edit Team & Roster"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setTeamToDelete(team)}
+                              className="p-1.5 text-slate-500 hover:text-rose-400 bg-slate-800/60 hover:bg-rose-950/40 rounded-lg transition-colors"
+                              title="Delete Team"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Prize Banner if assigned */}
+                      {team.prize && team.prize.trim() !== '' && team.prize !== '—' && (
+                        <div className="mb-2 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                          <Gift className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">Prize: {formatPrize(team.prize)}</span>
+                        </div>
+                      )}
+
+                      {/* Member Names Section (Yellow lines in screenshot) */}
+                      <div className="space-y-1.5 mt-2">
+                        <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Users className="w-3 h-3 text-rose-400" />
+                            Squad Members
+                          </span>
+                          <span className="text-slate-500">{team.members.length} Players</span>
+                        </div>
+
+                        {/* Captain */}
+                        {captain && (
+                          <div className="flex items-center justify-between p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Crown className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                              <span className="font-bold text-amber-200 font-mono truncate">
+                                {captain.ign}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {captain.role && (
+                                <span className="text-[10px] text-amber-400/80">{captain.role}</span>
+                              )}
+                              <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-500/40">
+                                Captain
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Other squad members */}
+                        <div className="space-y-1 max-h-48 overflow-y-auto pr-0.5">
+                          {otherMembers.map((member) => (
+                            <div
+                              key={member.id}
+                              className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0a0d14] border border-slate-800 text-xs text-slate-300"
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <User className="w-3 h-3 text-slate-500 flex-shrink-0" />
+                                <span className="font-mono text-slate-200 truncate">{member.ign}</span>
+                              </div>
+                              {member.role && (
+                                <span className="text-[9px] text-slate-500 font-medium truncate ml-1 flex-shrink-0">
+                                  {member.role}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer summary */}
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500 font-mono">
                   <span>ROS Legacy Division</span>
                   <span>ID: {team.id.replace('team-', '')}</span>
                 </div>

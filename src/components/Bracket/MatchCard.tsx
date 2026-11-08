@@ -1,6 +1,7 @@
 import React from 'react';
 import type { BracketMatch, Team } from '../../types';
 import { Crown, Swords, Edit3 } from 'lucide-react';
+import { TeamLogo } from '../Common/TeamLogo';
 
 interface MatchCardProps {
   match: BracketMatch;
@@ -82,9 +83,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           }`}
         >
           <div className="flex items-center gap-2 min-w-0 pr-2">
-            <span className="text-base select-none flex-shrink-0">
-              {team1?.logo || '🛡️'}
-            </span>
+            <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center flex-shrink-0 text-sm">
+              <TeamLogo logo={team1?.logo} name={team1?.name} className="w-full h-full text-sm" />
+            </div>
             <span className="truncate font-semibold tracking-wide">
               {team1 ? team1.name : 'TBD / Winner of Prev'}
             </span>
@@ -116,9 +117,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({
           }`}
         >
           <div className="flex items-center gap-2 min-w-0 pr-2">
-            <span className="text-base select-none flex-shrink-0">
-              {team2?.logo || '🛡️'}
-            </span>
+            <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center flex-shrink-0 text-sm">
+              <TeamLogo logo={team2?.logo} name={team2?.name} className="w-full h-full text-sm" />
+            </div>
             <span className="truncate font-semibold tracking-wide">
               {team2 ? team2.name : 'TBD / Winner of Prev'}
             </span>

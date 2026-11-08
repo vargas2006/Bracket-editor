@@ -2,6 +2,7 @@ import React from 'react';
 import type { Player } from '../../types';
 import { Crown, User, Trophy, Gift } from 'lucide-react';
 import { formatPrize } from '../../utils/leaderboardUtils';
+import { TeamLogo } from '../Common/TeamLogo';
 
 interface RosterPopoverProps {
   teamName: string;
@@ -29,8 +30,8 @@ export const RosterPopover: React.FC<RosterPopoverProps> = ({
     <div className="w-72 bg-[#121622] border border-slate-700/80 rounded-xl p-4 shadow-2xl backdrop-blur-md text-left pointer-events-auto">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-slate-800 pb-3 mb-3">
-        <div className="w-10 h-10 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-xl shadow-inner">
-          {logo || '🛡️'}
+        <div className="w-10 h-10 rounded-lg bg-slate-800/80 border border-slate-700 flex items-center justify-center text-xl shadow-inner overflow-hidden">
+          <TeamLogo logo={logo} name={teamName} className="w-full h-full text-xl" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">

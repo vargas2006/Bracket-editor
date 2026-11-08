@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { Team } from '../../types';
 import { X, GitBranch, CheckSquare, Square, Shuffle } from 'lucide-react';
+import { TeamLogo } from '../Common/TeamLogo';
 
 interface BracketSettingsModalProps {
   isOpen: boolean;
@@ -155,7 +156,9 @@ export const BracketSettingsModal: React.FC<BracketSettingsModalProps> = ({
                       <span className="font-mono text-[10px] w-5 text-slate-500">
                         {isSelected ? `#${seedIndex + 1}` : '-'}
                       </span>
-                      <span>{team.logo || '🛡️'}</span>
+                      <div className="w-5 h-5 rounded overflow-hidden flex items-center justify-center flex-shrink-0 text-sm">
+                        <TeamLogo logo={team.logo} name={team.name} className="w-full h-full text-sm" />
+                      </div>
                       <span className="font-semibold">{team.name}</span>
                     </div>
                     <span className="font-mono text-slate-500">{team.points} pts</span>

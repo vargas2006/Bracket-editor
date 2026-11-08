@@ -5,6 +5,7 @@ import { formatPrize, formatOrdinal, exportToCSV } from '../../utils/leaderboard
 import { RosterPopover } from './RosterPopover';
 import { LeaderboardImageExport } from './LeaderboardImageExport';
 import { ConfirmModal } from '../Common/ConfirmModal';
+import { TeamLogo } from '../Common/TeamLogo';
 import {
   Trophy,
   Medal,
@@ -25,6 +26,7 @@ import {
   Flame,
   Info,
   Check,
+  Table,
 } from 'lucide-react';
 
 export const LeaderboardTable: React.FC = () => {
@@ -45,8 +47,8 @@ export const LeaderboardTable: React.FC = () => {
   const scoring = settings.scoring;
   const totalGames = scoring?.totalGames ?? 5;
 
-  // View mode: 'gameMatrix' (Game 1, 2, 3... table) vs 'standings' (Overall Placement & Prize table)
-  const [tableMode, setTableMode] = useState<'gameMatrix' | 'standings'>('gameMatrix');
+  // View mode: 'gameMatrix' (Game 1, 2, 3... table), 'standings' (Overall table), 'grid' (Cards grid view)
+  const [tableMode, setTableMode] = useState<'gameMatrix' | 'standings' | 'grid'>('gameMatrix');
 
   const [expandedTeamIds, setExpandedTeamIds] = useState<Record<string, boolean>>({});
   const [activeHoverTeamId, setActiveHoverTeamId] = useState<string | null>(null);
@@ -142,166 +144,223 @@ export const LeaderboardTable: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top 3 Podium Cards Banner */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* 2nd Place */}
+      {/* Top 3 Podium Cards Banner (Grand Esports Podium with Big Logos) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
+        {/* 2nd Place Card (Runner-up) */}
         {top2 && (
-          <div className="order-2 md:order-1 relative bg-gradient-to-b from-slate-800/60 to-[#101420] border border-slate-700/80 rounded-2xl p-4 shadow-xl flex items-center justify-between overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-slate-400/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-slate-300/10 border border-slate-300/30 flex items-center justify-center text-2xl flex-shrink-0">
-                {top2.totalPoints > 0 ? (top2.logo || '🥈') : '❓'}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                    2nd Place
-                  </span>
-                  {top2.totalPoints > 0 && top2.isTied && (
-                    <span className="text-[9px] font-mono bg-slate-700 text-slate-300 px-1 rounded">
-                      TIED
-                    </span>
-                  )}
-                </div>
-                <h4 className="text-sm font-bold text-white truncate">
-                  {top2.totalPoints > 0 ? top2.teamName : 'Unknown'}
-                </h4>
-                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  {top2.totalPoints > 0 ? (
-                    <>
-                      <span>{top2.totalKills} Kills</span>
-                      <span>•</span>
-                      <span>{top2.totalChickenDinners} Wins 👑</span>
-                    </>
-                  ) : (
-                    <span className="text-slate-500 text-[11px] font-sans">Waiting for results...</span>
-                  )}
-                  {top2.prize && top2.prize !== '—' && (
-                    <>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[11px] font-sans">
-                        <Gift className="w-3 h-3 text-emerald-400" />
-                        {formatPrize(top2.prize)}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
+          <div className="order-2 md:order-1 relative bg-gradient-to-b from-slate-700/25 via-[#131724] to-[#0c0f18] border-2 border-slate-500/50 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-slate-950/50 flex flex-col items-center text-center overflow-hidden transition-all duration-200 group">
+            {/* Ambient Silver Glow */}
+            <div className="absolute top-0 inset-x-0 h-28 bg-slate-400/10 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Placement Badge */}
+            <div className="flex items-center gap-2 mb-3 relative z-10">
+              <span className="px-3 py-1 rounded-full bg-slate-800/90 border border-slate-500/50 text-slate-200 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow">
+                <Medal className="w-3.5 h-3.5 text-slate-300" />
+                2nd Place
+              </span>
+              {top2.totalPoints > 0 && top2.isTied && (
+                <span className="text-[10px] font-mono bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded border border-slate-600 font-bold">
+                  TIED
+                </span>
+              )}
             </div>
-            <div className="text-right flex-shrink-0 w-24">
-              <div className="text-2xl font-black font-mono text-slate-200">
+
+            {/* Big Logo Picture */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl bg-[#090c13] border-2 border-slate-400/60 flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-slate-700/20 overflow-hidden relative my-2 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+              <TeamLogo
+                logo={top2.totalPoints > 0 ? (top2.logo || '🥈') : '❓'}
+                name={top2.teamName}
+                fallback="🥈"
+                className="w-full h-full text-4xl sm:text-5xl"
+              />
+            </div>
+
+            {/* Team Name */}
+            <h4 className="text-base sm:text-lg font-black text-white tracking-wide truncate max-w-full mt-2">
+              {top2.totalPoints > 0 ? top2.teamName : 'Unknown'}
+            </h4>
+            {top2.tag && top2.totalPoints > 0 && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700 mt-1">
+                {top2.tag}
+              </span>
+            )}
+
+            {/* Total Points */}
+            <div className="my-2 text-center">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-slate-200 tracking-tight leading-none">
                 {top2.totalPoints}
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-slate-400">Total Points</div>
-            </div>
-          </div>
-        )}
-
-        {/* 1st Place */}
-        {top1 && (
-          <div className="order-1 md:order-2 relative bg-gradient-to-b from-amber-500/15 via-[#161a28] to-[#0f121d] border-2 border-amber-500/50 rounded-2xl p-5 shadow-2xl shadow-amber-950/20 flex items-center justify-between overflow-hidden scale-100 md:-translate-y-1">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center gap-3.5 min-w-0">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-400/20 to-amber-600/30 border border-amber-400/50 flex items-center justify-center text-3xl shadow-inner flex-shrink-0">
-                {top1.totalPoints > 0 ? (top1.logo || '👑') : '❓'}
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
-                    <Trophy className="w-3.5 h-3.5" />
-                    1st Place
-                  </span>
-                  {top1.totalPoints > 0 && top1.isTied && (
-                    <span className="text-[9px] font-mono bg-amber-500/20 text-amber-300 px-1 rounded border border-amber-500/30">
-                      TIED
-                    </span>
-                  )}
-                </div>
-                <h3 className="text-base font-extrabold text-white truncate">
-                  {top1.totalPoints > 0 ? top1.teamName : 'Unknown'}
-                </h3>
-                <div className="text-xs text-amber-300 font-semibold flex items-center gap-2 mt-0.5 flex-wrap">
-                  {top1.totalPoints > 0 ? (
-                    <>
-                      <span className="font-mono">{top1.totalKills} Kills</span>
-                      <span>•</span>
-                      <span>{top1.totalChickenDinners} Chicken Dinners 👑</span>
-                    </>
-                  ) : (
-                    <span className="text-slate-400 font-normal">Waiting for match results...</span>
-                  )}
-                  {top1.prize && top1.prize !== '—' && (
-                    <>
-                      <span>•</span>
-                      <span className="text-emerald-300 font-bold flex items-center gap-1 bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-500/30">
-                        <Gift className="w-3 h-3 text-emerald-400" />
-                        {formatPrize(top1.prize)}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="text-right flex-shrink-0 pl-2">
-              <div className="text-3xl font-black font-mono text-amber-400">
-                {top1.totalPoints}
-              </div>
-              <div className="text-[10px] uppercase font-bold tracking-wider text-amber-500/80">
+              <div className="text-[10px] uppercase font-bold tracking-widest text-slate-400 mt-1">
                 Total Points
               </div>
             </div>
+
+            {/* Stats & Prize */}
+            <div className="w-full pt-3 border-t border-slate-800/80 flex flex-col items-center gap-2 mt-auto">
+              <div className="text-xs text-slate-300 font-mono flex items-center gap-2 flex-wrap justify-center font-semibold">
+                {top2.totalPoints > 0 ? (
+                  <>
+                    <span>{top2.totalKills} Kills</span>
+                    <span>•</span>
+                    <span>{top2.totalChickenDinners} Wins 👑</span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 font-normal">Waiting for results...</span>
+                )}
+              </div>
+
+              {top2.prize && top2.prize !== '—' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs shadow-md">
+                  <Gift className="w-3.5 h-3.5 text-emerald-400" />
+                  {formatPrize(top2.prize)}
+                </span>
+              )}
+            </div>
           </div>
         )}
 
-        {/* 3rd Place */}
-        {top3 && (
-          <div className="order-3 relative bg-gradient-to-b from-amber-900/20 to-[#101420] border border-amber-800/40 rounded-2xl p-4 shadow-xl flex items-center justify-between overflow-hidden">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-600/5 rounded-full blur-2xl pointer-events-none" />
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-12 h-12 rounded-xl bg-amber-700/10 border border-amber-700/30 flex items-center justify-center text-2xl flex-shrink-0">
-                {top3.totalPoints > 0 ? (top3.logo || '🥉') : '❓'}
+        {/* 1st Place Card (Elevated Champion Tower) */}
+        {top1 && (
+          <div className="order-1 md:order-2 relative bg-gradient-to-b from-amber-500/25 via-[#151928] to-[#0c0f18] border-2 border-amber-500/70 rounded-3xl p-6 sm:p-7 shadow-2xl shadow-amber-950/60 flex flex-col items-center text-center overflow-hidden md:-translate-y-3 md:scale-105 z-10 transition-all duration-200 group">
+            {/* Ambient Gold Glow */}
+            <div className="absolute top-0 inset-x-0 h-36 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Placement Badge */}
+            <div className="flex items-center gap-2 mb-3 relative z-10">
+              <span className="px-3.5 py-1 rounded-full bg-amber-500/20 border border-amber-400/60 text-amber-300 font-black text-xs uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-amber-950/50">
+                <Crown className="w-4 h-4 text-amber-400" />
+                1st Place Champion
+              </span>
+              {top1.totalPoints > 0 && top1.isTied && (
+                <span className="text-[10px] font-mono bg-amber-500/30 text-amber-200 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold">
+                  TIED
+                </span>
+              )}
+            </div>
+
+            {/* Big Logo Picture */}
+            <div className="w-28 h-28 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-2xl bg-[#090c13] border-2 border-amber-400/80 flex items-center justify-center text-5xl sm:text-6xl shadow-2xl shadow-amber-500/25 overflow-hidden relative my-2 flex-shrink-0 group-hover:scale-105 transition-transform duration-300 ring-4 ring-amber-500/10">
+              <TeamLogo
+                logo={top1.totalPoints > 0 ? (top1.logo || '👑') : '❓'}
+                name={top1.teamName}
+                fallback="👑"
+                className="w-full h-full text-5xl sm:text-6xl"
+              />
+            </div>
+
+            {/* Team Name */}
+            <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-wide truncate max-w-full mt-2">
+              {top1.totalPoints > 0 ? top1.teamName : 'Unknown'}
+            </h3>
+            {top1.tag && top1.totalPoints > 0 && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-bold border border-amber-500/30 mt-1">
+                {top1.tag}
+              </span>
+            )}
+
+            {/* Total Points */}
+            <div className="my-2.5 text-center">
+              <div className="text-4xl sm:text-5xl font-black font-mono text-amber-400 tracking-tight leading-none">
+                {top1.totalPoints}
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
-                    3rd Place
-                  </span>
-                  {top3.totalPoints > 0 && top3.isTied && (
-                    <span className="text-[9px] font-mono bg-amber-900/40 text-amber-400 px-1 rounded">
-                      TIED
-                    </span>
-                  )}
-                </div>
-                <h4 className="text-sm font-bold text-white truncate">
-                  {top3.totalPoints > 0 ? top3.teamName : 'Unknown'}
-                </h4>
-                <div className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  {top3.totalPoints > 0 ? (
-                    <>
-                      <span>{top3.totalKills} Kills</span>
-                      <span>•</span>
-                      <span>{top3.totalChickenDinners} Wins 👑</span>
-                    </>
-                  ) : (
-                    <span className="text-slate-500 text-[11px] font-sans">Waiting for results...</span>
-                  )}
-                  {top3.prize && top3.prize !== '—' && (
-                    <>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[11px] font-sans">
-                        <Gift className="w-3 h-3 text-emerald-400" />
-                        {formatPrize(top3.prize)}
-                      </span>
-                    </>
-                  )}
-                </div>
+              <div className="text-[10px] uppercase font-bold tracking-widest text-amber-500/80 mt-1">
+                Total Points
               </div>
             </div>
-            <div className="text-right flex-shrink-0 w-24">
-              <div className="text-2xl font-black font-mono text-amber-500">
+
+            {/* Stats & Prize */}
+            <div className="w-full pt-3 border-t border-slate-800/80 flex flex-col items-center gap-2 mt-auto">
+              <div className="text-xs text-amber-200 font-mono flex items-center gap-2 flex-wrap justify-center font-semibold">
+                {top1.totalPoints > 0 ? (
+                  <>
+                    <span>{top1.totalKills} Kills</span>
+                    <span>•</span>
+                    <span>{top1.totalChickenDinners} Wins 👑</span>
+                  </>
+                ) : (
+                  <span className="text-slate-400 font-normal">Waiting for match results...</span>
+                )}
+              </div>
+
+              {top1.prize && top1.prize !== '—' && (
+                <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs shadow-md">
+                  <Gift className="w-3.5 h-3.5 text-emerald-400" />
+                  {formatPrize(top1.prize)}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 3rd Place Card */}
+        {top3 && (
+          <div className="order-3 relative bg-gradient-to-b from-amber-900/30 via-[#131724] to-[#0c0f18] border-2 border-amber-800/50 rounded-3xl p-5 sm:p-6 shadow-2xl shadow-amber-950/40 flex flex-col items-center text-center overflow-hidden transition-all duration-200 group">
+            {/* Ambient Bronze Glow */}
+            <div className="absolute top-0 inset-x-0 h-28 bg-amber-700/10 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Placement Badge */}
+            <div className="flex items-center gap-2 mb-3 relative z-10">
+              <span className="px-3 py-1 rounded-full bg-amber-950/80 border border-amber-700/50 text-amber-400 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow">
+                <Medal className="w-3.5 h-3.5 text-amber-600" />
+                3rd Place
+              </span>
+              {top3.totalPoints > 0 && top3.isTied && (
+                <span className="text-[10px] font-mono bg-amber-900/40 text-amber-400 px-1.5 py-0.5 rounded border border-amber-800/50 font-bold">
+                  TIED
+                </span>
+              )}
+            </div>
+
+            {/* Big Logo Picture */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-2xl bg-[#090c13] border-2 border-amber-700/60 flex items-center justify-center text-4xl sm:text-5xl shadow-2xl shadow-amber-900/20 overflow-hidden relative my-2 flex-shrink-0 group-hover:scale-105 transition-transform duration-300">
+              <TeamLogo
+                logo={top3.totalPoints > 0 ? (top3.logo || '🥉') : '❓'}
+                name={top3.teamName}
+                fallback="🥉"
+                className="w-full h-full text-4xl sm:text-5xl"
+              />
+            </div>
+
+            {/* Team Name */}
+            <h4 className="text-base sm:text-lg font-black text-white tracking-wide truncate max-w-full mt-2">
+              {top3.totalPoints > 0 ? top3.teamName : 'Unknown'}
+            </h4>
+            {top3.tag && top3.totalPoints > 0 && (
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-amber-500 font-bold border border-slate-700 mt-1">
+                {top3.tag}
+              </span>
+            )}
+
+            {/* Total Points */}
+            <div className="my-2 text-center">
+              <div className="text-3xl sm:text-4xl font-black font-mono text-amber-500 tracking-tight leading-none">
                 {top3.totalPoints}
               </div>
-              <div className="text-[10px] uppercase tracking-wider text-slate-400">Total Points</div>
+              <div className="text-[10px] uppercase font-bold tracking-widest text-amber-600/80 mt-1">
+                Total Points
+              </div>
+            </div>
+
+            {/* Stats & Prize */}
+            <div className="w-full pt-3 border-t border-slate-800/80 flex flex-col items-center gap-2 mt-auto">
+              <div className="text-xs text-amber-300/90 font-mono flex items-center gap-2 flex-wrap justify-center font-semibold">
+                {top3.totalPoints > 0 ? (
+                  <>
+                    <span>{top3.totalKills} Kills</span>
+                    <span>•</span>
+                    <span>{top3.totalChickenDinners} Wins 👑</span>
+                  </>
+                ) : (
+                  <span className="text-slate-500 font-normal">Waiting for results...</span>
+                )}
+              </div>
+
+              {top3.prize && top3.prize !== '—' && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold text-xs shadow-md">
+                  <Gift className="w-3.5 h-3.5 text-emerald-400" />
+                  {formatPrize(top3.prize)}
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -309,8 +368,8 @@ export const LeaderboardTable: React.FC = () => {
 
       {/* Control Bar: Mode Toggle, Search, Roster Mode, Admin Actions */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-[#111520] border border-slate-800/80 p-3 rounded-xl shadow-lg">
-        {/* Left: Table Mode Toggle (Game-by-Game Matrix vs Standings) */}
-        <div className="flex items-center bg-[#0a0d14] p-1 rounded-lg border border-slate-800 text-xs self-start sm:self-auto">
+        {/* Left: Mode Toggle (Game Matrix vs Standings vs Grid View) */}
+        <div className="flex items-center bg-[#0a0d14] p-1 rounded-lg border border-slate-800 text-xs self-start sm:self-auto flex-wrap gap-1">
           <button
             onClick={() => setTableMode('gameMatrix')}
             className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
@@ -319,8 +378,8 @@ export const LeaderboardTable: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Game-by-Game Leaderboard</span>
+            <Table className="w-3.5 h-3.5" />
+            <span>Game Matrix</span>
           </button>
 
           <button
@@ -332,7 +391,19 @@ export const LeaderboardTable: React.FC = () => {
             }`}
           >
             <ListOrdered className="w-3.5 h-3.5" />
-            <span>Overall Standings & Prizes</span>
+            <span>Standings Table</span>
+          </button>
+
+          <button
+            onClick={() => setTableMode('grid')}
+            className={`px-3 py-1.5 rounded text-xs font-bold flex items-center gap-1.5 transition-all ${
+              tableMode === 'grid'
+                ? 'bg-rose-600 text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Grid View</span>
           </button>
         </div>
 
@@ -510,9 +581,9 @@ export const LeaderboardTable: React.FC = () => {
                                 </button>
                               )}
 
-                              <span className="text-xl flex-shrink-0 select-none">
-                                {entry.logo || '🛡️'}
-                              </span>
+                              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 bg-slate-800/80 border border-slate-700/60 text-base">
+                                <TeamLogo logo={entry.logo} name={entry.teamName} className="w-full h-full text-base" />
+                              </div>
 
                               {/* Team Name with Mode A Popover trigger */}
                               <div className="relative group min-w-0">
@@ -820,9 +891,9 @@ export const LeaderboardTable: React.FC = () => {
                                 </button>
                               )}
 
-                              <span className="text-xl flex-shrink-0 select-none">
-                                {entry.logo || '🛡️'}
-                              </span>
+                              <div className="w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 bg-slate-800/80 border border-slate-700/60 text-base">
+                                <TeamLogo logo={entry.logo} name={entry.name} className="w-full h-full text-base" />
+                              </div>
 
                               <div className="relative group min-w-0">
                                 <div

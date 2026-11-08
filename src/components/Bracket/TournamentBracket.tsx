@@ -4,6 +4,7 @@ import type { BracketMatch, Team } from '../../types';
 import { MatchCard } from './MatchCard';
 import { MatchEditModal } from './MatchEditModal';
 import { BracketSettingsModal } from './BracketSettingsModal';
+import { TeamLogo } from '../Common/TeamLogo';
 import {
   Trophy,
   Settings,
@@ -70,8 +71,8 @@ export const TournamentBracket: React.FC = () => {
         <div className="relative overflow-hidden bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-amber-500/15 border-2 border-amber-500/60 rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-300">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/30 border border-amber-300">
-                {championTeam.logo || '👑'}
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-4xl shadow-xl shadow-amber-500/30 border border-amber-300 overflow-hidden">
+                <TeamLogo logo={championTeam.logo} name={championTeam.name} fallback="👑" className="w-full h-full text-4xl" />
               </div>
               <div>
                 <div className="text-xs font-black uppercase tracking-widest text-amber-400 flex items-center justify-center md:justify-start gap-1">

@@ -211,6 +211,25 @@ function runTests() {
   assert(formatWinnerDisplay('Zeta 1', 0) === 'Unknown', 'Test 9.1: Winner display with 0 pts is Unknown');
   assert(formatWinnerDisplay('Alpha Squad', 65) === 'Alpha Squad', 'Test 9.2: Winner display with >0 pts is team name');
 
+  // 10. Team Logo Option: Emoji vs Custom Image
+  const isImageLogoCheck = (logo?: string | null): boolean => {
+    if (!logo || typeof logo !== 'string') return false;
+    const trimmed = logo.trim();
+    return (
+      trimmed.startsWith('data:image/') ||
+      trimmed.startsWith('http://') ||
+      trimmed.startsWith('https://') ||
+      trimmed.startsWith('blob:') ||
+      trimmed.startsWith('/') ||
+      /\.(png|jpe?g|svg|webp|gif|bmp)(\?.*)?$/i.test(trimmed)
+    );
+  };
+  assert(isImageLogoCheck('data:image/webp;base64,UklGRk...'), 'Test 10.1: Base64 data URI is recognized as image logo');
+  assert(isImageLogoCheck('https://example.com/logo.png'), 'Test 10.2: HTTPS image URL is recognized as image logo');
+  assert(!isImageLogoCheck('👑'), 'Test 10.3: Emoji preset is NOT treated as image logo');
+  assert(!isImageLogoCheck('🛡️'), 'Test 10.4: Shield fallback is NOT treated as image logo');
+  assert(!isImageLogoCheck(undefined), 'Test 10.5: Undefined logo is NOT treated as image logo');
+
   console.log(`\n=== TEST SUMMARY: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);

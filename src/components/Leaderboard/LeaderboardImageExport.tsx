@@ -5,6 +5,7 @@ import {
   renderLeaderboardToCanvas,
   type GraphicExportOptions,
 } from '../../utils/graphicExportUtils';
+import { isImageLogo } from '../Common/TeamLogo';
 import {
   Download,
   Copy,
@@ -63,6 +64,7 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
   // Re-render canvas whenever settings or options change
   useEffect(() => {
     if (!isOpen) return;
+    let isMounted = true;
 
     let canvas = canvasRef.current;
     if (!canvas) {
@@ -70,12 +72,45 @@ export const LeaderboardImageExport: React.FC<LeaderboardImageExportProps> = ({
       canvasRef.current = canvas;
     }
 
-    try {
-      renderLeaderboardToCanvas(canvas, entries, gameEntries, totalGames, settings, options);
-      setPreviewDataUrl(canvas.toDataURL('image/png'));
-    } catch (err) {
-      console.error('Failed to generate preview canvas:', err);
+    const render = () => {
+      if (!isMounted || !canvas) return;
+      try {
+        renderLeaderboardToCanvas(canvas, entries, gameEntries, totalGames, settings, options);
+        setPreviewDataUrl(canvas.toDataURL('image/png'));
+      } catch (err) {
+        console.error('Failed to generate preview canvas:', err);
+      }
+    };
+
+    // Immediate initial render
+    render();
+
+    // Preload any image logos if present, then re-render once loaded
+    const imageLogos = (entries || [])
+      .map((e) => e.logo)
+      .concat((gameEntries || []).map((g) => g.logo))
+      .filter((l): l is string => Boolean(l && isImageLogo(l)));
+
+    if (imageLogos.length > 0) {
+      Promise.all(
+        imageLogos.map(
+          (src) =>
+            new Promise<void>((resolve) => {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload = () => resolve();
+              img.onerror = () => resolve();
+              img.src = src;
+            })
+        )
+      ).then(() => {
+        render();
+      });
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [isOpen, entries, gameEntries, totalGames, settings, options]);
 
   if (!isOpen) return null;
