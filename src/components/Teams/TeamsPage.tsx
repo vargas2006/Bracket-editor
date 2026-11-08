@@ -5,6 +5,7 @@ import { formatPrize } from '../../utils/leaderboardUtils';
 import { TeamModal } from './TeamModal';
 import { ConfirmModal } from '../Common/ConfirmModal';
 import { TeamLogo } from '../Common/TeamLogo';
+import { TeamRosterImageExport } from './TeamRosterImageExport';
 import {
   Plus,
   Crown,
@@ -15,15 +16,17 @@ import {
   Trash2,
   User,
   Users,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export const TeamsPage: React.FC = () => {
-  const { teams, isAdmin, addTeam, updateTeam, deleteTeam } = useTournament();
+  const { teams, settings, isAdmin, addTeam, updateTeam, deleteTeam } = useTournament();
 
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+  const [isExportImageOpen, setIsExportImageOpen] = useState(false);
 
   const filteredTeams = teams.filter((t) => {
     if (!search.trim()) return true;
@@ -63,6 +66,17 @@ export const TeamsPage: React.FC = () => {
               className="w-full pl-9 pr-3 py-2 bg-[#0b0e15] border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
             />
           </div>
+
+          {/* Download Image Button */}
+          <button
+            onClick={() => setIsExportImageOpen(true)}
+            title="Download high-resolution image of teams & rosters (1 page or 2 pages)"
+            className="px-3.5 py-2 bg-[#171c2b] hover:bg-slate-800 text-slate-200 hover:text-white rounded-lg text-xs font-bold flex items-center gap-1.5 border border-slate-700 shadow-sm transition-colors whitespace-nowrap"
+          >
+            <ImageIcon className="w-4 h-4 text-rose-400" />
+            <span className="hidden sm:inline">Download Image</span>
+            <span className="sm:hidden">Image</span>
+          </button>
 
           {isAdmin && (
             <button
@@ -276,6 +290,14 @@ export const TeamsPage: React.FC = () => {
           }
         }}
         onCancel={() => setTeamToDelete(null)}
+      />
+
+      {/* Download Squad Rosters Graphic Modal */}
+      <TeamRosterImageExport
+        teams={teams}
+        settings={settings}
+        isOpen={isExportImageOpen}
+        onClose={() => setIsExportImageOpen(false)}
       />
     </div>
   );

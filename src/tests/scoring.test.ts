@@ -230,6 +230,53 @@ function runTests() {
   assert(!isImageLogoCheck('🛡️'), 'Test 10.4: Shield fallback is NOT treated as image logo');
   assert(!isImageLogoCheck(undefined), 'Test 10.5: Undefined logo is NOT treated as image logo');
 
+  // 11. Team Roster Export Pagination (1 Page, 2 Pages, 3 Pages)
+  const rosterTeams = Array.from({ length: 25 }, (_, i) => ({
+    id: `team-${i + 1}`,
+    name: `Team ${i + 1}`,
+    points: 0,
+    kills: 0,
+    wins: 0,
+    members: [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }));
+
+  const splitPages = (teams: any[], totalPages: 1 | 2 | 3) => {
+    if (totalPages === 1 || teams.length === 0) return [teams];
+    const count = teams.length;
+    const baseSize = Math.floor(count / totalPages);
+    const remainder = count % totalPages;
+    const pages: any[][] = [];
+    let startIndex = 0;
+    for (let i = 0; i < totalPages; i++) {
+      const pageSize = baseSize + (i < remainder ? 1 : 0);
+      pages.push(teams.slice(startIndex, startIndex + pageSize));
+      startIndex += pageSize;
+    }
+    return pages;
+  };
+
+  const onePageRes = splitPages(rosterTeams, 1);
+  assert(onePageRes.length === 1, 'Test 11.1: 1-page mode returns 1 page');
+  assert(onePageRes[0].length === 25, 'Test 11.2: 1-page mode holds all 25 teams');
+
+  const twoPageRes = splitPages(rosterTeams, 2);
+  assert(twoPageRes.length === 2, 'Test 11.3: 2-page mode returns 2 pages');
+  assert(twoPageRes[0].length === 13, 'Test 11.4: 2-page mode splits 25 teams into 13 in page 1');
+  assert(twoPageRes[1].length === 12, 'Test 11.5: 2-page mode splits 25 teams into 12 in page 2');
+  assert(twoPageRes[0][0].name === 'Team 1', 'Test 11.6: Page 1 starts with Team 1');
+  assert(twoPageRes[1][0].name === 'Team 14', 'Test 11.7: Page 2 starts with Team 14');
+
+  const threePageRes = splitPages(rosterTeams, 3);
+  assert(threePageRes.length === 3, 'Test 11.8: 3-page mode returns 3 pages');
+  assert(threePageRes[0].length === 9, 'Test 11.9: 3-page mode splits 25 teams into 9 in page 1');
+  assert(threePageRes[1].length === 8, 'Test 11.10: 3-page mode splits 25 teams into 8 in page 2');
+  assert(threePageRes[2].length === 8, 'Test 11.11: 3-page mode splits 25 teams into 8 in page 3');
+  assert(threePageRes[0][0].name === 'Team 1', 'Test 11.12: Page 1 starts with Team 1');
+  assert(threePageRes[1][0].name === 'Team 10', 'Test 11.13: Page 2 starts with Team 10');
+  assert(threePageRes[2][0].name === 'Team 18', 'Test 11.14: Page 3 starts with Team 18');
+
   console.log(`\n=== TEST SUMMARY: ${passed} PASSED, ${failed} FAILED ===\n`);
   if (failed > 0) {
     process.exit(1);

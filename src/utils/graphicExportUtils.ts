@@ -2,9 +2,9 @@ import type { GameLeaderboardEntry, LeaderboardEntry, TournamentSettings } from 
 import { formatPrize, formatOrdinal } from './leaderboardUtils';
 import { isImageLogo } from '../components/Common/TeamLogo';
 
-const canvasImageCache = new Map<string, HTMLImageElement>();
+export const canvasImageCache = new Map<string, HTMLImageElement>();
 
-function getLoadedImage(src: string): HTMLImageElement | null {
+export function getLoadedImage(src: string): HTMLImageElement | null {
   if (!src) return null;
   let img = canvasImageCache.get(src);
   if (!img) {
@@ -16,7 +16,7 @@ function getLoadedImage(src: string): HTMLImageElement | null {
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
-function drawLogoOnCanvas(
+export function drawLogoOnCanvas(
   ctx: CanvasRenderingContext2D,
   logo: string,
   x: number,
