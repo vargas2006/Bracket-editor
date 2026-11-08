@@ -45,12 +45,14 @@ export function drawLogoOnCanvas(
 }
 
 export interface GraphicExportOptions {
-  mode: 'gameMatrix' | 'standings';
+  mode: 'gameMatrix' | 'standings' | 'grid';
   showPodium: boolean;
   showScoringRules: boolean;
   showCaptain: boolean;
   showPrize: boolean;
   maxTeams: number; // e.g. 8, 12, 16, or 999 for all
+  pageCount?: 1 | 2 | 3;
+  activePage?: number;
 }
 
 /**
@@ -133,10 +135,31 @@ export function renderLeaderboardToCanvas(
   const paddingX = 50;
   const contentWidth = width - paddingX * 2; // 1500px
 
-  const displayEntries = (options.mode === 'gameMatrix' ? gameEntries : entries).slice(
-    0,
-    options.maxTeams
-  );
+  const isGridMode = options.mode === 'grid';
+  let displayEntries: (GameLeaderboardEntry | LeaderboardEntry)[] = [];
+
+  if (isGridMode) {
+    const allGridEntries = gameEntries.slice(0, options.maxTeams);
+    if (options.pageCount && options.pageCount > 1) {
+      const count = allGridEntries.length;
+      const baseSize = Math.floor(count / options.pageCount);
+      const remainder = count % options.pageCount;
+      const pIdx = Math.max(0, Math.min((options.activePage || 1) - 1, options.pageCount - 1));
+      let start = 0;
+      for (let i = 0; i < pIdx; i++) {
+        start += baseSize + (i < remainder ? 1 : 0);
+      }
+      const size = baseSize + (pIdx < remainder ? 1 : 0);
+      displayEntries = allGridEntries.slice(start, start + size);
+    } else {
+      displayEntries = allGridEntries;
+    }
+  } else {
+    displayEntries = (options.mode === 'gameMatrix' ? gameEntries : entries).slice(
+      0,
+      options.maxTeams
+    );
+  }
 
   const hasTeams = displayEntries.length > 0;
   const showPodium = options.showPodium && hasTeams;
@@ -155,15 +178,31 @@ export function renderLeaderboardToCanvas(
     ? displayEntries.length * rowHeight
     : 130; // empty state height
 
-  const totalHeight =
-    headerHeight +
-    (showPodium ? podiumHeight + spacingBetweenSections : 0) +
-    (showScoringRules ? scoringRulesHeight + spacingBetweenSections : 0) +
-    tableHeaderHeight +
-    tableBodyHeight +
-    spacingBetweenSections +
-    footerHeight +
-    25; // bottom margin
+  const gridNumCols = displayEntries.length <= 4 ? 2 : 3;
+  const gridCardHeight = 356;
+  const gridRowGap = 20;
+  const gridNumRows = Math.max(1, Math.ceil(displayEntries.length / gridNumCols));
+  const gridBodyHeight =
+    displayEntries.length === 0
+      ? 140
+      : gridNumRows * gridCardHeight + (gridNumRows - 1) * gridRowGap;
+
+  const totalHeight = isGridMode
+    ? headerHeight +
+      (showPodium ? podiumHeight + spacingBetweenSections : 0) +
+      (showScoringRules ? scoringRulesHeight + spacingBetweenSections : 0) +
+      gridBodyHeight +
+      spacingBetweenSections +
+      footerHeight +
+      25
+    : headerHeight +
+      (showPodium ? podiumHeight + spacingBetweenSections : 0) +
+      (showScoringRules ? scoringRulesHeight + spacingBetweenSections : 0) +
+      tableHeaderHeight +
+      tableBodyHeight +
+      spacingBetweenSections +
+      footerHeight +
+      25; // bottom margin
 
   canvas.width = width;
   canvas.height = totalHeight;
@@ -519,8 +558,361 @@ export function renderLeaderboardToCanvas(
     currentY += bannerH + spacingBetweenSections;
   }
 
-  // 6. THE LEADERBOARD TABLE CONTAINER (Solid dark panel)
-  const tableContainerY = currentY;
+  // 6. MAIN CONTENT SECTION (Grid View Cards OR Table)
+  if (options.mode === 'grid') {
+    const gridEntries = displayEntries as GameLeaderboardEntry[];
+    const numCols = gridEntries.length <= 4 ? 2 : 3;
+    const colGap = numCols === 2 ? 28 : 20;
+    const cardWidth = (contentWidth - (numCols - 1) * colGap) / numCols;
+    const cardHeight = 356;
+    const rowGap = 20;
+
+    if (gridEntries.length === 0) {
+      drawRoundedRect(
+        ctx,
+        paddingX,
+        currentY,
+        contentWidth,
+        140,
+        12,
+        '#0e121e',
+        '#1e2538',
+        1
+      );
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('NO LEADERBOARD TEAMS FOUND', width / 2, currentY + 70);
+      ctx.textAlign = 'left';
+    } else {
+      for (let i = 0; i < gridEntries.length; i++) {
+        const entry = gridEntries[i];
+        const col = i % numCols;
+        const row = Math.floor(i / numCols);
+
+        const cardX = paddingX + col * (cardWidth + colGap);
+        const cardY = currentY + row * (cardHeight + rowGap);
+
+        const isTop1 = entry.rank === 1 && entry.totalPoints > 0;
+        const isTop2 = entry.rank === 2 && entry.totalPoints > 0;
+        const isTop3 = entry.rank === 3 && entry.totalPoints > 0;
+        const captain = entry.members.find((m) => m.isCaptain);
+
+        // 1. Card Container & Border
+        const borderColor = isTop1
+          ? 'rgba(245, 158, 11, 0.7)'
+          : isTop2
+          ? 'rgba(148, 163, 184, 0.6)'
+          : isTop3
+          ? 'rgba(180, 83, 9, 0.6)'
+          : '#1e293b';
+
+        drawRoundedRect(
+          ctx,
+          cardX,
+          cardY,
+          cardWidth,
+          cardHeight,
+          14,
+          '#10141f',
+          borderColor,
+          isTop1 || isTop2 || isTop3 ? 1.5 : 1
+        );
+
+        // Top Accent Strip
+        const accentColor = isTop1
+          ? '#f59e0b'
+          : isTop2
+          ? '#94a3b8'
+          : isTop3
+          ? '#b45309'
+          : '#e11d48';
+        drawRoundedRect(
+          ctx,
+          cardX + 1,
+          cardY + 1,
+          cardWidth - 2,
+          3,
+          [3, 3, 0, 0],
+          accentColor
+        );
+
+        // 2. Header Row: Rank Badge & Tied (Left) + Prize (Right)
+        const headerY = cardY + 14;
+        ctx.textBaseline = 'alphabetic';
+
+        // Rank Badge
+        let badgeBg = '#1e293b';
+        let badgeTextColor = '#94a3b8';
+        let badgeLabel = formatOrdinal(entry.rank);
+
+        if (entry.totalPoints > 0) {
+          if (entry.rank === 1) {
+            badgeBg = '#f59e0b';
+            badgeTextColor = '#000000';
+            badgeLabel = '1st';
+          } else if (entry.rank === 2) {
+            badgeBg = '#94a3b8';
+            badgeTextColor = '#000000';
+            badgeLabel = '2nd';
+          } else if (entry.rank === 3) {
+            badgeBg = '#b45309';
+            badgeTextColor = '#ffffff';
+            badgeLabel = '3rd';
+          }
+        }
+
+        ctx.font = '900 11px monospace';
+        const badgeW = 34;
+        const badgeH = 24;
+        drawRoundedRect(
+          ctx,
+          cardX + 14,
+          headerY,
+          badgeW,
+          badgeH,
+          6,
+          badgeBg,
+          isTop1 ? '#fbbf24' : undefined,
+          1
+        );
+        ctx.fillStyle = badgeTextColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(badgeLabel, cardX + 14 + badgeW / 2, headerY + 16);
+
+        // Tied Badge
+        if (entry.isTied) {
+          ctx.font = 'bold 9px monospace';
+          const tiedW = 32;
+          drawRoundedRect(
+            ctx,
+            cardX + 14 + badgeW + 6,
+            headerY + 2,
+            tiedW,
+            20,
+            4,
+            'rgba(245, 158, 11, 0.15)',
+            'rgba(245, 158, 11, 0.4)',
+            1
+          );
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText('TIED', cardX + 14 + badgeW + 6 + tiedW / 2, headerY + 15);
+        }
+
+        // Prize Pill (Right)
+        if (
+          options.showPrize !== false &&
+          entry.prize &&
+          entry.prize.trim() !== '' &&
+          entry.prize !== '—'
+        ) {
+          const prizeText = `🎁 ${formatPrize(entry.prize)}`;
+          ctx.font = 'bold 11px sans-serif';
+          const prizeW = ctx.measureText(prizeText).width + 16;
+          const prizeX = cardX + cardWidth - 14 - prizeW;
+          drawRoundedRect(
+            ctx,
+            prizeX,
+            headerY + 1,
+            prizeW,
+            22,
+            5,
+            'rgba(16, 185, 129, 0.12)',
+            'rgba(16, 185, 129, 0.3)',
+            1
+          );
+          ctx.fillStyle = '#34d399';
+          ctx.textAlign = 'center';
+          ctx.fillText(prizeText, prizeX + prizeW / 2, headerY + 16);
+        }
+
+        // 3. Center Team Logo
+        const logoSize = 80;
+        const logoX = cardX + (cardWidth - logoSize) / 2;
+        const logoY = cardY + 46;
+
+        drawRoundedRect(
+          ctx,
+          logoX,
+          logoY,
+          logoSize,
+          logoSize,
+          14,
+          '#090c13',
+          isTop1 ? '#f59e0b' : '#334155',
+          1.5
+        );
+        drawLogoOnCanvas(ctx, entry.logo || '', logoX + 3, logoY + 3, logoSize - 6, '🛡️');
+
+        // 4. Team Name & Tag & Captain
+        let textY = logoY + logoSize + 18;
+        ctx.textAlign = 'center';
+
+        // Team Name
+        let nameColor = '#ffffff';
+        if (isTop1) nameColor = '#fde68a';
+        else if (isTop2) nameColor = '#e2e8f0';
+        else if (isTop3) nameColor = '#fbbf24';
+
+        ctx.fillStyle = nameColor;
+        ctx.font = '900 17px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        const safeName = truncateText(ctx, entry.teamName, cardWidth - 32);
+        ctx.fillText(safeName, cardX + cardWidth / 2, textY);
+
+        // Tag or Captain
+        textY += 16;
+        if (captain && options.showCaptain !== false) {
+          ctx.font = 'bold 11px monospace';
+          ctx.fillStyle = '#94a3b8';
+          const capText = truncateText(ctx, `👑 Captain: ${captain.ign}`, cardWidth - 32);
+          ctx.fillText(capText, cardX + cardWidth / 2, textY);
+        } else if (entry.tag) {
+          ctx.font = 'bold 10px monospace';
+          ctx.fillStyle = '#f43f5e';
+          ctx.fillText(`[${entry.tag}]`, cardX + cardWidth / 2, textY);
+        }
+
+        // 5. Total Points & Stats Banner
+        const bannerY = textY + 12;
+        const bannerW = cardWidth - 28;
+        const bannerH = 48;
+        const bannerX = cardX + 14;
+
+        drawRoundedRect(
+          ctx,
+          bannerX,
+          bannerY,
+          bannerW,
+          bannerH,
+          10,
+          '#0c0f18',
+          '#1e293b',
+          1
+        );
+
+        // Left: TOTAL POINTS + X PTS
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('TOTAL POINTS', bannerX + 12, bannerY + 17);
+
+        ctx.font = '900 18px monospace';
+        ctx.fillStyle = isTop1 ? '#fbbf24' : isTop2 ? '#e2e8f0' : isTop3 ? '#f59e0b' : '#ffffff';
+        ctx.fillText(`${entry.totalPoints}`, bannerX + 12, bannerY + 38);
+        const ptsW = ctx.measureText(`${entry.totalPoints}`).width;
+        ctx.font = 'bold 9px monospace';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(' PTS', bannerX + 12 + ptsW, bannerY + 36);
+
+        // Right: Kills & Wins
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(`${entry.totalKills} Kills`, bannerX + bannerW - 12, bannerY + 20);
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(`${entry.totalChickenDinners} Wins 👑`, bannerX + bannerW - 12, bannerY + 38);
+
+        // 6. Match Breakdown Row (Mini-Grid)
+        const matchY = bannerY + bannerH + 12;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText('MATCH BREAKDOWN', cardX + 14, matchY);
+
+        ctx.textAlign = 'right';
+        ctx.font = 'bold 9px monospace';
+        ctx.fillText(`${totalGames} MATCHES`, cardX + cardWidth - 14, matchY);
+
+        const gridYPos = matchY + 6;
+        const cellGap = 4;
+        const cellW = (bannerW - (totalGames - 1) * cellGap) / totalGames;
+        const cellH = 30;
+
+        for (let g = 1; g <= totalGames; g++) {
+          const cX = bannerX + (g - 1) * (cellW + cellGap);
+          const score = entry.gameScores[g];
+          const hasPlayed = score !== undefined;
+          const isHigh = score !== undefined && score > 0;
+
+          drawRoundedRect(
+            ctx,
+            cX,
+            gridYPos,
+            cellW,
+            cellH,
+            4,
+            '#080b11',
+            isHigh ? 'rgba(244, 63, 94, 0.4)' : '#1e293b',
+            1
+          );
+
+          ctx.textAlign = 'center';
+          ctx.font = '8px monospace';
+          ctx.fillStyle = '#64748b';
+          ctx.fillText(`G${g}`, cX + cellW / 2, gridYPos + 11);
+
+          ctx.font = 'bold 10px monospace';
+          ctx.fillStyle = isHigh ? '#f43f5e' : hasPlayed ? '#cbd5e1' : '#475569';
+          ctx.fillText(hasPlayed ? `${score}` : '-', cX + cellW / 2, gridYPos + 24);
+        }
+
+        // 7. Squad Roster Pills
+        const rosterY = gridYPos + cellH + 10;
+        ctx.textAlign = 'left';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillText(`👥 ROSTER (${entry.members.length})`, cardX + 14, rosterY);
+
+        const memberPillsY = rosterY + 4;
+        let pillX = cardX + 14;
+        const displayMembers = entry.members.slice(0, 3);
+
+        ctx.font = '9px monospace';
+        for (const m of displayMembers) {
+          const pText = truncateText(ctx, `${m.isCaptain ? '👑 ' : ''}${m.ign}`, 75);
+          const pW = ctx.measureText(pText).width + 10;
+          if (pillX + pW > cardX + cardWidth - 14) break;
+
+          drawRoundedRect(
+            ctx,
+            pillX,
+            memberPillsY,
+            pW,
+            18,
+            4,
+            m.isCaptain ? 'rgba(245, 158, 11, 0.12)' : '#0c0f18',
+            m.isCaptain ? 'rgba(245, 158, 11, 0.35)' : '#1e293b',
+            1
+          );
+          ctx.fillStyle = m.isCaptain ? '#fbbf24' : '#cbd5e1';
+          ctx.fillText(pText, pillX + 5, memberPillsY + 12);
+          pillX += pW + 4;
+        }
+
+        if (entry.members.length > 3 && pillX + 28 <= cardX + cardWidth - 14) {
+          const extraText = `+${entry.members.length - 3}`;
+          const extraW = 24;
+          drawRoundedRect(
+            ctx,
+            pillX,
+            memberPillsY,
+            extraW,
+            18,
+            4,
+            '#1e293b',
+            '#334155',
+            1
+          );
+          ctx.fillStyle = '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.fillText(extraText, pillX + extraW / 2, memberPillsY + 12);
+        }
+      }
+    }
+  } else {
+    // 6. THE LEADERBOARD TABLE CONTAINER (Solid dark panel)
+    const tableContainerY = currentY;
   const tableContainerHeight = tableHeaderHeight + tableBodyHeight;
 
   drawRoundedRect(
@@ -949,6 +1341,7 @@ export function renderLeaderboardToCanvas(
       rowY += rowHeight;
     });
   }
+}
 
   // 8. FOOTER SECTION (Solid dark panel)
   const footerY = totalHeight - footerHeight - 12;

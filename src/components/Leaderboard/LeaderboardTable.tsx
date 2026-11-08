@@ -1325,6 +1325,7 @@ export const LeaderboardTable: React.FC = () => {
         gameEntries={gameLeaderboard}
         totalGames={totalGames}
         settings={settings}
+        initialMode={tableMode}
         isOpen={isExportImageOpen}
         onClose={() => setIsExportImageOpen(false)}
       />
