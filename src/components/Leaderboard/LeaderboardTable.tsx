@@ -494,7 +494,7 @@ export const LeaderboardTable: React.FC = () => {
       {/* ========================================================== */}
       {/* 1. TOURNAMENT GAMES MATRIX LEADERBOARD (Reference Format)   */}
       {/* ========================================================== */}
-      {tableMode === 'gameMatrix' ? (
+      {tableMode === 'gameMatrix' && (
         <div className="bg-[#10141f] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -814,10 +814,12 @@ export const LeaderboardTable: React.FC = () => {
             </table>
           </div>
         </div>
-      ) : (
-        /* ========================================================== */
-        /* 2. OVERALL STANDINGS & PRIZES TABLE                        */
-        /* ========================================================== */
+      )}
+
+      {/* ========================================================== */}
+      {/* 2. OVERALL STANDINGS & PRIZES TABLE                        */}
+      {/* ========================================================== */}
+      {tableMode === 'standings' && (
         <div className="bg-[#10141f] border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -1075,7 +1077,249 @@ export const LeaderboardTable: React.FC = () => {
         </div>
       )}
 
-      {/* Modals */}
+      {/* ========================================================== */}
+      {/* 3. GRID VIEW (Responsive Team Cards Layout)                */}
+      {/* ========================================================== */}
+      {tableMode === 'grid' && (
+        <div>
+          {filteredGameEntries.length === 0 ? (
+            <div className="py-16 text-center bg-[#10141f] border border-dashed border-slate-800 rounded-2xl p-8 text-slate-500">
+              No teams found matching "{searchQuery}"
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+              {filteredGameEntries.map((entry) => {
+                const isTop1 = entry.rank === 1 && entry.totalPoints > 0;
+                const isTop2 = entry.rank === 2 && entry.totalPoints > 0;
+                const isTop3 = entry.rank === 3 && entry.totalPoints > 0;
+                const isExpanded = !!expandedTeamIds[entry.teamId];
+                const captain = entry.members.find((m) => m.isCaptain);
+
+                return (
+                  <div
+                    key={entry.teamId}
+                    className={`bg-[#10141f] border rounded-2xl p-4 shadow-xl flex flex-col justify-between group transition-all duration-200 relative overflow-hidden ${
+                      isTop1
+                        ? 'border-amber-500/60 bg-gradient-to-b from-amber-500/[0.08] via-[#10141f] to-[#0d101a] shadow-amber-950/30'
+                        : isTop2
+                        ? 'border-slate-400/50 bg-gradient-to-b from-slate-300/[0.05] via-[#10141f] to-[#0d101a]'
+                        : isTop3
+                        ? 'border-amber-700/50 bg-gradient-to-b from-amber-800/[0.05] via-[#10141f] to-[#0d101a]'
+                        : 'border-slate-800/80 hover:border-slate-700'
+                    }`}
+                  >
+                    {/* Top Accent Strip */}
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-1 ${
+                        isTop1
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-600'
+                          : isTop2
+                          ? 'bg-gradient-to-r from-slate-300 to-slate-500'
+                          : isTop3
+                          ? 'bg-gradient-to-r from-amber-600 to-amber-800'
+                          : 'bg-transparent group-hover:bg-rose-500/50'
+                      } transition-colors`}
+                    />
+
+                    <div>
+                      {/* Card Header: Rank Badge & Prize / Actions */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-1.5">
+                          {getRankBadge(entry.rank, entry.totalPoints)}
+                          {entry.isTied && (
+                            <span
+                              title={`Tied on points (${entry.tiebreakerNote || ''})`}
+                              className="text-[9px] font-mono font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20"
+                            >
+                              TIED
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {entry.prize && entry.prize.trim() !== '' && entry.prize !== '—' && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 font-semibold text-xs border border-emerald-500/20 shadow-sm">
+                              <Gift className="w-3 h-3 text-emerald-400" />
+                              {formatPrize(entry.prize)}
+                            </span>
+                          )}
+
+                          {isAdmin && (
+                            <button
+                              onClick={() => setTeamToDelete({ id: entry.teamId, name: entry.teamName })}
+                              title="Delete Team"
+                              className="p-1.5 text-slate-500 hover:text-rose-400 bg-slate-800/80 hover:bg-rose-950/40 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Prominent Team Logo */}
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto my-2 rounded-2xl bg-[#090c13] border-2 border-slate-700/80 group-hover:border-rose-500/50 flex items-center justify-center text-4xl shadow-xl shadow-black/50 overflow-hidden relative group-hover:scale-105 transition-all duration-200">
+                        <TeamLogo logo={entry.logo} name={entry.teamName} className="w-full h-full text-4xl" />
+                      </div>
+
+                      {/* Team Name, Tag & Captain */}
+                      <div className="text-center mt-2 min-w-0">
+                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                          <h4
+                            className={`font-black text-base tracking-wide truncate max-w-full ${
+                              isTop1
+                                ? 'text-amber-300'
+                                : isTop2
+                                ? 'text-slate-200'
+                                : isTop3
+                                ? 'text-amber-400'
+                                : 'text-white group-hover:text-rose-400 transition-colors'
+                            }`}
+                          >
+                            {entry.teamName}
+                          </h4>
+                          {entry.tag && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.2 bg-slate-800 text-slate-400 rounded border border-slate-700">
+                              {entry.tag}
+                            </span>
+                          )}
+                        </div>
+
+                        {captain && (
+                          <div className="text-[11px] text-slate-400 flex items-center justify-center gap-1 mt-0.5 truncate">
+                            <Crown className="w-3 h-3 text-amber-400/80 shrink-0" />
+                            <span className="truncate">Captain: {captain.ign}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Total Points & Kills / Wins Banner */}
+                      <div className="mt-3 p-2.5 rounded-xl bg-[#0c0f18] border border-slate-800/80 flex items-center justify-between">
+                        <div>
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Points</div>
+                          <div className="text-xl font-black font-mono text-white flex items-center gap-1">
+                            <span className={isTop1 ? 'text-amber-400' : isTop2 ? 'text-slate-200' : isTop3 ? 'text-amber-500' : 'text-white'}>
+                              {entry.totalPoints}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-bold">PTS</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right text-xs font-mono text-slate-300 space-y-0.5">
+                          <div>
+                            <span className="text-emerald-400 font-bold">{entry.totalKills}</span> Kills
+                          </div>
+                          <div>
+                            <span className="text-amber-400 font-bold">{entry.totalChickenDinners}</span> Wins 👑
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Games Matrix Row */}
+                      <div className="mt-2.5 pt-2 border-t border-slate-800/80">
+                        <div className="text-[9px] font-mono text-slate-400 uppercase font-bold mb-1 flex items-center justify-between">
+                          <span>Match Breakdown</span>
+                          <span>{totalGames} Matches</span>
+                        </div>
+                        <div className="grid grid-cols-5 gap-1 text-center font-mono text-[10px]">
+                          {Array.from({ length: totalGames }, (_, i) => i + 1).map((g) => {
+                            const pts = entry.gameScores[g];
+                            const hasPlayed = pts !== undefined;
+                            return (
+                              <div
+                                key={g}
+                                className={`py-1 rounded bg-[#080b11] border ${
+                                  pts && pts > 0
+                                    ? 'border-rose-500/40 text-rose-300 font-bold'
+                                    : hasPlayed
+                                    ? 'border-slate-800 text-slate-400'
+                                    : 'border-slate-800/50 text-slate-600'
+                                }`}
+                                title={`Game ${g}: ${pts !== undefined ? pts : 0} pts`}
+                              >
+                                <div className="text-[8px] text-slate-400">G{g}</div>
+                                <div>{pts !== undefined ? pts : '-'}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Roster Section (Expandable) */}
+                    <div className="mt-3 pt-3 border-t border-slate-800/80">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between mb-2">
+                        <span className="flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-rose-400" />
+                          Roster ({entry.members.length})
+                        </span>
+                        <button
+                          onClick={() => toggleExpand(entry.teamId)}
+                          className="text-[10px] text-slate-400 hover:text-white flex items-center gap-0.5 transition-colors"
+                        >
+                          {isExpanded ? 'Collapse' : 'View'}
+                          {isExpanded ? <ChevronDown className="w-3 h-3 text-rose-400" /> : <ChevronRight className="w-3 h-3" />}
+                        </button>
+                      </div>
+
+                      {isExpanded ? (
+                        <div className="space-y-1 mt-1 max-h-36 overflow-y-auto pr-1">
+                          {entry.members.map((player) => (
+                            <div
+                              key={player.id}
+                              className={`p-1.5 rounded-lg border text-xs flex items-center justify-between ${
+                                player.isCaptain
+                                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                                  : 'bg-[#090c13] border-slate-800 text-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {player.isCaptain ? (
+                                  <Crown className="w-3 h-3 text-amber-400 flex-shrink-0" />
+                                ) : (
+                                  <span className="w-1 h-1 rounded-full bg-slate-600 flex-shrink-0" />
+                                )}
+                                <span className="font-mono font-semibold truncate text-[11px]">{player.ign}</span>
+                              </div>
+                              <span
+                                className={`text-[8px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${
+                                  player.isCaptain ? 'bg-amber-950/80 text-amber-400' : 'text-slate-400'
+                                }`}
+                              >
+                                {player.isCaptain ? 'Captain' : player.role || 'Member'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {entry.members.slice(0, 3).map((player) => (
+                            <span
+                              key={player.id}
+                              className={`text-[10px] font-mono px-1.5 py-0.5 rounded border truncate max-w-[90px] ${
+                                player.isCaptain
+                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                  : 'bg-[#0c0f18] text-slate-300 border-slate-800'
+                              }`}
+                              title={player.ign}
+                            >
+                              {player.isCaptain ? '👑 ' : ''}{player.ign}
+                            </span>
+                          ))}
+                          {entry.members.length > 3 && (
+                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-700/60">
+                              +{entry.members.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
       <LeaderboardImageExport
         entries={leaderboard}
         gameEntries={gameLeaderboard}
